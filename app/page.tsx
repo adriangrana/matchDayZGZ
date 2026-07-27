@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { Countdown } from "@/src/components/countdown";
 import { DemoBadge } from "@/src/components/demo-badge";
 import { Header } from "@/src/components/header";
+import { NewsCard } from "@/src/components/news-card";
 import { TeamMark } from "@/src/components/team-mark";
 import { DemoMatchDayProvider } from "@/src/providers/demo-match-day-provider";
-import type { Match, NewsArticle } from "@/src/domain/models";
+import type { Match } from "@/src/domain/models";
+import { getNewsSnapshot } from "@/src/services/news-service";
 
 const dateFormatter = new Intl.DateTimeFormat("es-ES", {
   weekday: "short",
@@ -58,41 +61,16 @@ function MatchRow({
   );
 }
 
-function NewsCard({
-  article,
-  featured = false,
-}: {
-  article: NewsArticle;
-  featured?: boolean;
-}) {
-  return (
-    <article className={featured ? "news-card news-card-featured" : "news-card"}>
-      <div className="news-placeholder" aria-hidden="true">
-        <span>MZ</span>
-        <small>{article.category}</small>
-      </div>
-      <div className="news-copy">
-        <div className="news-meta">
-          <span className="category-pill">{article.category}</span>
-          <span>{formatDate(article.publishedAt)}</span>
-          {article.confirmation === "oficial" && (
-            <span className="official-pill">Oficial</span>
-          )}
-        </div>
-        <h3>{article.title}</h3>
-        <p>{article.summary}</p>
-        <span className="source-label">Fuente demo · sin enlace real</span>
-      </div>
-    </article>
-  );
-}
-
 export default async function Home() {
   const provider = new DemoMatchDayProvider();
-  const snapshot = await provider.getSnapshot();
+  const [snapshot, newsSnapshot] = await Promise.all([
+    provider.getSnapshot(),
+    getNewsSnapshot(),
+  ]);
   const nextMatch = snapshot.nextMatch;
   const zaragozaIsHome = nextMatch.homeTeam.id === "real-zaragoza";
-  const renderedAt = new Date().toISOString();
+  const now = new Date();
+  const renderedAt = now.toISOString();
 
   return (
     <div className="site-shell">
@@ -265,15 +243,47 @@ export default async function Home() {
               <p className="eyebrow">Actualidad</p>
               <h2>Lo que mueve al zaragocismo</h2>
             </div>
-            <a href="#actualidad" className="text-link">
-              Toda la actualidad <span aria-hidden="true">→</span>
-            </a>
+            <div className="section-actions">
+              <span
+                className={
+                  newsSnapshot.stale
+                    ? "sync-state sync-state-stale"
+                    : "sync-state"
+                }
+              >
+                <span aria-hidden="true" />
+                {newsSnapshot.mode === "demo"
+                  ? "Noticias demo"
+                  : newsSnapshot.stale
+                    ? "Últimos datos válidos"
+                    : "Sincronización activa"}
+              </span>
+              <Link href="/actualidad" className="text-link">
+                Toda la actualidad <span aria-hidden="true">→</span>
+              </Link>
+            </div>
           </div>
-          <div className="news-grid">
-            {snapshot.news.map((article, index) => (
-              <NewsCard key={article.id} article={article} featured={index === 0} />
-            ))}
-          </div>
+          {newsSnapshot.groups.length > 0 ? (
+            <div className="news-grid">
+              {newsSnapshot.groups.slice(0, 3).map((group, index) => (
+                <NewsCard
+                  featured={index === 0}
+                  group={group}
+                  key={group.primary.id}
+                  now={now}
+                  priority={index === 0}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="home-news-empty">
+              <strong>Actualidad temporalmente no disponible</strong>
+              <p>
+                No inventamos titulares cuando las fuentes no responden.
+                Volveremos a intentarlo en la próxima sincronización.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="demo-notice page-container" aria-label="Aviso de datos">
@@ -281,9 +291,9 @@ export default async function Home() {
           <div>
             <strong>Estás viendo una demostración funcional</strong>
             <p>
-              Todos los partidos, resultados, posiciones y noticias de esta
-              versión son ficticios. La capa de proveedores ya está preparada
-              para incorporar fuentes autorizadas sin cambiar la interfaz.
+              Los partidos, resultados y posiciones de esta versión siguen
+              siendo ficticios. La sección Actualidad ya utiliza feeds RSS
+              reales, conserva su atribución y enlaza siempre al medio original.
             </p>
           </div>
         </section>

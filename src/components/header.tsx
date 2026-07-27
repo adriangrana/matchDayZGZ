@@ -1,29 +1,30 @@
+import Link from "next/link";
 import { DemoBadge } from "@/src/components/demo-badge";
 
 const links = [
-  ["Inicio", "#inicio"],
-  ["Partidos", "#partidos"],
-  ["Clasificación", "#clasificacion"],
-  ["Actualidad", "#actualidad"],
+  ["Inicio", "/#inicio"],
+  ["Partidos", "/#partidos"],
+  ["Clasificación", "/#clasificacion"],
+  ["Actualidad", "/actualidad"],
 ] as const;
 
 export function Header() {
   return (
     <header className="site-header">
       <div className="page-container header-inner">
-        <a className="brand" href="#inicio" aria-label="MatchDay ZGZ, inicio">
+        <Link className="brand" href="/#inicio" aria-label="MatchDay ZGZ, inicio">
           <span className="brand-mark">MZ</span>
           <span className="brand-copy">
             <strong>MatchDay</strong>
             <small>ZGZ</small>
           </span>
-        </a>
+        </Link>
 
         <nav aria-label="Navegación principal">
           {links.map(([label, href]) => (
-            <a href={href} key={href}>
+            <Link href={href} key={href}>
               {label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -42,4 +43,3 @@ export function Header() {
     </header>
   );
 }
-
