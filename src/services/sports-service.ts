@@ -186,6 +186,11 @@ async function synchronizeSports(
     leagueName: process.env.API_FOOTBALL_LEAGUE_NAME?.trim() || undefined,
   });
   const state = await store.read();
+  if (!store.isPersistent()) {
+    return demoSportsSnapshot(store, [
+      "La web local usa un runtime sin escritura de archivos; ejecuta npm run sync:sports para probar API-Football sin exponer la clave",
+    ]);
+  }
   const durations = cacheHours();
   const errors: string[] = [];
   let metadata: SportsProviderMetadata | undefined = state.metadata;

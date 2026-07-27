@@ -21,8 +21,8 @@ export async function fetchWithRetry(
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
+    await policy.beforeAttempt?.(attempt);
     try {
-      await policy.beforeAttempt?.(attempt);
       const response = await fetch(url, {
         ...init,
         headers: {

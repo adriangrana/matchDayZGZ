@@ -81,6 +81,13 @@ La portada seguirá mostrando datos demo actuales mientras el plan gratuito no
 permita una temporada con próximos partidos. El proveedor permanece
 desacoplado y listo para sustituirse sin cambiar la interfaz.
 
+El runtime web local de Vinext tampoco permite escribir archivos desde el
+renderizado. Por seguridad, la portada no intenta consultar API-Football si no
+puede actualizar de forma duradera el contador de cuota. La sincronización real
+se comprueba con `npm run sync:sports`, que sí usa la caché local ignorada por
+Git. Una futura versión con almacenamiento persistente podrá consumir ese
+adaptador desde la web sin modificar la interfaz.
+
 ## Caché y límites
 
 - calendario, próximos partidos y resultados: 6 horas;
