@@ -48,6 +48,7 @@ claves privadas.
 | `SYNC_INTERVAL_MINUTES` | Frecuencia normal de actualización |
 | `LIVE_SYNC_INTERVAL_SECONDS` | Frecuencia durante un partido |
 | `DATA_STALE_AFTER_MINUTES` | Umbral para avisar de datos desactualizados |
+| `NEXT_PUBLIC_SITE_URL` | Origen público usado por los metadatos sociales |
 
 ## Datos y proveedores
 
@@ -74,4 +75,3 @@ caché offline según las fuentes reales.
 ## Plan
 
 La arquitectura, fases y decisiones pendientes están en [PLAN.md](./PLAN.md).
-
