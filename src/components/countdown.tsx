@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-function getRemaining(targetDate: string) {
-  const distance = Math.max(0, new Date(targetDate).getTime() - Date.now());
+function getRemaining(targetDate: string, now = Date.now()) {
+  const distance = Math.max(0, new Date(targetDate).getTime() - now);
   const totalHours = Math.floor(distance / 3_600_000);
 
   return {
@@ -14,8 +14,17 @@ function getRemaining(targetDate: string) {
   };
 }
 
-export function Countdown({ targetDate }: { targetDate: string }) {
-  const initial = useMemo(() => getRemaining(targetDate), [targetDate]);
+export function Countdown({
+  targetDate,
+  initialNow,
+}: {
+  targetDate: string;
+  initialNow: string;
+}) {
+  const initial = useMemo(
+    () => getRemaining(targetDate, new Date(initialNow).getTime()),
+    [initialNow, targetDate],
+  );
   const [remaining, setRemaining] = useState(initial);
 
   useEffect(() => {
@@ -47,4 +56,3 @@ export function Countdown({ targetDate }: { targetDate: string }) {
     </div>
   );
 }
-

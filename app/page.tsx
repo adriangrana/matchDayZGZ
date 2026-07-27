@@ -92,6 +92,7 @@ export default async function Home() {
   const snapshot = await provider.getSnapshot();
   const nextMatch = snapshot.nextMatch;
   const zaragozaIsHome = nextMatch.homeTeam.id === "real-zaragoza";
+  const renderedAt = new Date().toISOString();
 
   return (
     <div className="site-shell">
@@ -163,7 +164,10 @@ export default async function Home() {
                 </div>
               </div>
 
-              <Countdown targetDate={nextMatch.startsAt} />
+              <Countdown
+                targetDate={nextMatch.startsAt}
+                initialNow={renderedAt}
+              />
             </article>
 
             <aside className="brief-card" aria-labelledby="brief-title">
@@ -301,4 +305,3 @@ export default async function Home() {
     </div>
   );
 }
-
