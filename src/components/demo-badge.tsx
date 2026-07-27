@@ -1,9 +1,16 @@
-export function DemoBadge() {
+export function DemoBadge({
+  label = "Prototipo local",
+  title = "Aplicación local en fase de prototipo",
+  mark = "L",
+}: {
+  label?: string;
+  title?: string;
+  mark?: string;
+}) {
   return (
-    <span className="demo-badge" title="Todos los datos visibles son ficticios">
-      <span aria-hidden="true">D</span>
-      Datos demo
+    <span className="demo-badge" title={title}>
+      <span aria-hidden="true">{mark}</span>
+      {label}
     </span>
   );
 }
-

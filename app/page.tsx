@@ -3,9 +3,9 @@ import { DemoBadge } from "@/src/components/demo-badge";
 import { Header } from "@/src/components/header";
 import { NewsCard } from "@/src/components/news-card";
 import { TeamMark } from "@/src/components/team-mark";
-import { DemoMatchDayProvider } from "@/src/providers/demo-match-day-provider";
 import type { Match } from "@/src/domain/models";
 import { getNewsSnapshot } from "@/src/services/news-service";
+import { getSportsSnapshot } from "@/src/services/sports-service";
 
 const dateFormatter = new Intl.DateTimeFormat("es-ES", {
   weekday: "short",
@@ -25,6 +25,18 @@ function formatDate(value: string) {
 
 function formatTime(value: string) {
   return timeFormatter.format(new Date(value));
+}
+
+function formatUpdatedAt(value: string) {
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Madrid",
+  })
+    .format(new Date(value))
+    .replace(".", "");
 }
 
 function MatchRow({
@@ -61,9 +73,8 @@ function MatchRow({
 }
 
 export default async function Home() {
-  const provider = new DemoMatchDayProvider();
   const [snapshot, newsSnapshot] = await Promise.all([
-    provider.getSnapshot(),
+    getSportsSnapshot(),
     getNewsSnapshot(),
   ]);
   const nextMatch = snapshot.nextMatch;
@@ -78,7 +89,19 @@ export default async function Home() {
         <section className="hero-section page-container" id="inicio">
           <div className="hero-heading">
             <div>
-              <DemoBadge />
+              <DemoBadge
+                label={
+                  snapshot.mode === "real"
+                    ? "API-Football local"
+                    : "Datos deportivos demo"
+                }
+                mark={snapshot.mode === "real" ? "A" : "D"}
+                title={
+                  snapshot.mode === "real"
+                    ? "Datos deportivos de API-Football para uso local"
+                    : "Los datos deportivos visibles son ficticios"
+                }
+              />
               <p className="eyebrow">Todo el zaragocismo, en un solo lugar</p>
               <h1>El partido empieza aquí.</h1>
             </div>
@@ -95,7 +118,9 @@ export default async function Home() {
                   <span className="live-dot" />
                   <span id="next-match-title">Próximo partido</span>
                 </div>
-                <span className="schedule-pill">Horario provisional</span>
+                <span className="schedule-pill">
+                  Horario {nextMatch.scheduleStatus}
+                </span>
               </div>
 
               <div className="competition-line">
@@ -153,8 +178,12 @@ export default async function Home() {
               <h2 id="brief-title">La actualidad, en 30 segundos</h2>
               <p>{snapshot.dailyBrief}</p>
               <div className="brief-footer">
-                <span>Resumen automático · Demo</span>
-                <span>Actualizado 20:00</span>
+                <span>
+                  {snapshot.mode === "real"
+                    ? "API-Football · Uso local"
+                    : "Resumen automático · Demo"}
+                </span>
+                <span>Actualizado {formatUpdatedAt(snapshot.generatedAt)}</span>
               </div>
             </aside>
           </div>
@@ -163,7 +192,10 @@ export default async function Home() {
         <section className="content-section page-container" id="partidos">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Temporada 2026/27 · Demo</p>
+              <p className="eyebrow">
+                Temporada {nextMatch.competition.season}
+                {snapshot.mode === "demo" ? " · Demo" : ""}
+              </p>
               <h2>La jornada, de un vistazo</h2>
             </div>
             <a href="#partidos" className="text-link">
@@ -175,7 +207,7 @@ export default async function Home() {
             <div className="panel results-panel">
               <div className="panel-heading">
                 <h3>Últimos resultados</h3>
-                <span>3 partidos</span>
+                <span>{snapshot.recentMatches.length} partidos</span>
               </div>
               <div className="match-list">
                 {snapshot.recentMatches.map((match) => (
@@ -199,7 +231,9 @@ export default async function Home() {
             <div className="panel standing-panel" id="clasificacion">
               <div className="panel-heading">
                 <h3>Clasificación</h3>
-                <span>Pretemporada</span>
+                <span>
+                  {snapshot.mode === "real" ? "Datos sincronizados" : "Demo"}
+                </span>
               </div>
               <div className="standing-header">
                 <span>Pos</span>
@@ -230,7 +264,11 @@ export default async function Home() {
                 ))}
               </div>
               <p className="standing-note">
-                La competición aún no ha comenzado. Posiciones ilustrativas.
+                {snapshot.mode === "real"
+                  ? `${snapshot.stale ? "Último snapshot válido" : "Actualizada"} ${formatUpdatedAt(
+                      snapshot.syncTimes.standings ?? snapshot.generatedAt,
+                    )} · ${snapshot.requestUsage.used}/${snapshot.requestUsage.limit} solicitudes estimadas hoy.`
+                  : "La competición aún no ha comenzado. Posiciones ilustrativas."}
               </p>
             </div>
           </div>
@@ -286,13 +324,22 @@ export default async function Home() {
         </section>
 
         <section className="demo-notice page-container" aria-label="Aviso de datos">
-          <div className="demo-notice-mark" aria-hidden="true">D</div>
+          <div className="demo-notice-mark" aria-hidden="true">
+            {snapshot.mode === "real" ? "A" : "D"}
+          </div>
           <div>
-            <strong>Estás viendo una demostración funcional</strong>
+            <strong>
+              {snapshot.mode === "real"
+                ? "Prototipo deportivo local"
+                : "Datos deportivos en modo demostración"}
+            </strong>
             <p>
-              Los partidos, resultados y posiciones de esta versión siguen
-              siendo ficticios. La sección Actualidad ya utiliza feeds RSS
-              reales, conserva su atribución y enlaza siempre al medio original.
+              {snapshot.mode === "real"
+                ? `API-Football se usa únicamente en local. Última actualización: ${formatUpdatedAt(
+                    snapshot.generatedAt,
+                  )}. No se muestran imágenes suministradas por la API.`
+                : snapshot.sourceErrors[0] ??
+                  "Los partidos, resultados y posiciones son ficticios. Actualidad utiliza fuentes RSS reales."}
             </p>
           </div>
         </section>
@@ -308,7 +355,7 @@ export default async function Home() {
             </span>
           </div>
           <p>Hecho en Zaragoza para quienes nunca dejan de creer.</p>
-          <span>Fase 1 · Datos demo</span>
+          <span>Fase 2 · Prototipo local</span>
         </div>
       </footer>
     </div>
