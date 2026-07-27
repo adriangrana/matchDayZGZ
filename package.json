@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "sync:demo": "tsx scripts/sync-demo.ts",
     "sync:news": "tsx scripts/sync-news.ts",
+    "sync:sports": "node --env-file-if-exists=.env.local --import tsx scripts/sync-sports.ts",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

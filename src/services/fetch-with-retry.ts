@@ -2,6 +2,7 @@ export interface FetchPolicy {
   timeoutMs?: number;
   retries?: number;
   retryDelayMs?: number;
+  beforeAttempt?: (attempt: number) => Promise<void> | void;
 }
 
 function abortSignal(parent: AbortSignal | undefined, timeoutMs: number) {
@@ -21,10 +22,11 @@ export async function fetchWithRetry(
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
+      await policy.beforeAttempt?.(attempt);
       const response = await fetch(url, {
         ...init,
         headers: {
-          "user-agent": "MatchDay-ZGZ/0.2 (+news aggregator; metadata only)",
+          "user-agent": "MatchDay-ZGZ/0.3 (+local personal prototype)",
           accept: "application/rss+xml, application/xml, text/xml;q=0.9",
           ...init.headers,
         },
@@ -51,4 +53,3 @@ export async function fetchWithRetry(
     ? lastError
     : new Error(`No se pudo obtener ${url}`);
 }
-

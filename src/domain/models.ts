@@ -77,6 +77,27 @@ export interface StandingEntry {
   points: number;
 }
 
+export interface DailyRequestUsage {
+  date: string;
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
+export interface SportsSyncTimes {
+  fixtures?: IsoDateString;
+  standings?: IsoDateString;
+  metadata?: IsoDateString;
+}
+
+export interface SportsDashboardSnapshot extends MatchDaySnapshot {
+  mode: "real" | "demo";
+  stale: boolean;
+  sourceErrors: string[];
+  requestUsage: DailyRequestUsage;
+  syncTimes: SportsSyncTimes;
+}
+
 export interface NewsArticle {
   id: string;
   title: string;
