@@ -69,7 +69,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${archivo.variable} ${archivoBlack.variable}`}>
+      <body
+        className={`${archivo.variable} ${archivoBlack.variable}`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
