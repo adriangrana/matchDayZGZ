@@ -13,11 +13,12 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "sync:demo": "tsx scripts/sync-demo.ts",
+    "sync:news": "tsx scripts/sync-news.ts",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
-    "fast-xml-parser": "5.3.6",
+    "fast-xml-parser": "5.10.1",
     "next": "16.2.12",
     "postgres": "3.4.8",
     "react": "19.2.6",

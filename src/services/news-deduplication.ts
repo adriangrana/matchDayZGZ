@@ -1,18 +1,9 @@
-import type { NewsArticle } from "@/src/domain/models";
+import type { NewsArticle, NewsGroup } from "@/src/domain/models";
+import { normalizeTitle } from "@/src/services/news-normalization";
 
-function normalize(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function tokenSimilarity(first: string, second: string): number {
-  const firstTokens = new Set(normalize(first).split(" ").filter(Boolean));
-  const secondTokens = new Set(normalize(second).split(" ").filter(Boolean));
+export function tokenSimilarity(first: string, second: string): number {
+  const firstTokens = new Set(normalizeTitle(first).split(" ").filter(Boolean));
+  const secondTokens = new Set(normalizeTitle(second).split(" ").filter(Boolean));
   if (firstTokens.size === 0 || secondTokens.size === 0) return 0;
 
   const intersection = [...firstTokens].filter((token) =>
@@ -23,45 +14,92 @@ function tokenSimilarity(first: string, second: string): number {
 }
 
 function sameCanonicalUrl(first: string, second: string): boolean {
-  const clean = (url: string) => url.split(/[?#]/)[0]?.replace(/\/$/, "");
-  return clean(first) === clean(second);
+  return first === second;
 }
 
-function sameDay(first: string, second: string): boolean {
-  return first.slice(0, 10) === second.slice(0, 10);
+function withinDateWindow(first: string, second: string): boolean {
+  const distance = Math.abs(
+    new Date(first).getTime() - new Date(second).getTime(),
+  );
+  return distance <= 36 * 60 * 60 * 1_000;
 }
 
 function sharedEntity(first: NewsArticle, second: NewsArticle): boolean {
-  return first.relatedEntityIds.some((id) => second.relatedEntityIds.includes(id));
+  return first.relatedEntityIds.some(
+    (id) => id !== "real-zaragoza" && second.relatedEntityIds.includes(id),
+  );
 }
 
-function isDuplicate(first: NewsArticle, second: NewsArticle): boolean {
+export function isRelatedNews(
+  first: NewsArticle,
+  second: NewsArticle,
+): boolean {
   if (sameCanonicalUrl(first.canonicalUrl, second.canonicalUrl)) return true;
-  if (!sameDay(first.publishedAt, second.publishedAt)) return false;
+  if (!withinDateWindow(first.publishedAt, second.publishedAt)) return false;
 
   const similarity = tokenSimilarity(first.title, second.title);
-  return similarity >= 0.72 || (similarity >= 0.55 && sharedEntity(first, second));
+  return similarity >= 0.68 || (similarity >= 0.5 && sharedEntity(first, second));
 }
 
-function preferenceScore(article: NewsArticle): number {
-  const officialBonus = article.confirmation === "oficial" ? 10 : 0;
-  return officialBonus + article.summary.length / 1_000;
+function articleScore(article: NewsArticle, now: Date): number {
+  const ageInHours = Math.max(
+    0,
+    (now.getTime() - new Date(article.publishedAt).getTime()) / 3_600_000,
+  );
+  const recency = Math.max(0, 48 - ageInHours) / 6;
+  const official = article.confirmation === "official" ? 30 : 0;
+  const confirmation =
+    article.confirmation === "confirmed"
+      ? 4
+      : article.confirmation === "rumor"
+        ? -2
+        : 0;
+  const completeness =
+    (article.summary ? 1 : 0) + (article.imageUrl ? 1 : 0) + (article.author ? 0.5 : 0);
+  return official + confirmation + recency + completeness;
 }
 
-export function deduplicateNews(articles: NewsArticle[]): NewsArticle[] {
-  return articles.reduce<NewsArticle[]>((unique, article) => {
-    const duplicateIndex = unique.findIndex((candidate) =>
-      isDuplicate(candidate, article),
-    );
+export function groupRelatedNews(
+  articles: NewsArticle[],
+  now = new Date(),
+): NewsGroup[] {
+  const groups: NewsArticle[][] = [];
 
-    if (duplicateIndex === -1) return [...unique, article];
-    if (preferenceScore(article) <= preferenceScore(unique[duplicateIndex]!)) {
-      return unique;
-    }
-
-    return unique.map((item, index) =>
-      index === duplicateIndex ? article : item,
+  for (const article of articles) {
+    const group = groups.find((candidate) =>
+      candidate.some((item) => isRelatedNews(item, article)),
     );
-  }, []);
+    if (group) group.push(article);
+    else groups.push([article]);
+  }
+
+  return groups
+    .map((group) => {
+      const sorted = [...group].sort(
+        (first, second) =>
+          articleScore(second, now) - articleScore(first, now),
+      );
+      const primary = sorted[0]!;
+      const sourceCount = new Set(sorted.map((item) => item.source.id)).size;
+      return {
+        primary,
+        related: sorted.slice(1),
+        sourceCount,
+        relevanceScore: articleScore(primary, now) + (sourceCount - 1) * 3,
+      };
+    })
+    .sort(
+      (first, second) =>
+        second.relevanceScore - first.relevanceScore ||
+        new Date(second.primary.publishedAt).getTime() -
+          new Date(first.primary.publishedAt).getTime(),
+    );
+}
+
+export function deduplicateNews(
+  articles: NewsArticle[],
+  now = new Date(),
+): NewsArticle[] {
+  return groupRelatedNews(articles, now).map((group) => group.primary);
 }
 

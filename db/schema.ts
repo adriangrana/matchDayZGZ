@@ -19,11 +19,12 @@ export const matchStatus = pgEnum("match_status", [
 ]);
 
 export const confirmationLevel = pgEnum("confirmation_level", [
-  "oficial",
-  "muy_probable",
-  "en_negociacion",
+  "official",
+  "confirmed",
+  "negotiation",
   "rumor",
-  "descartado",
+  "dismissed",
+  "unknown",
 ]);
 
 const timestamps = {
@@ -36,6 +37,7 @@ export const sources = pgTable("sources", {
   name: text("name").notNull(),
   baseUrl: text("base_url").notNull(),
   kind: text("kind").notNull(),
+  isOfficial: boolean("is_official").default(false).notNull(),
   enabled: boolean("enabled").default(true).notNull(),
   ...timestamps,
 });
@@ -133,14 +135,20 @@ export const newsArticles = pgTable(
     sourceId: text("source_id")
       .references(() => sources.id)
       .notNull(),
+    originalUrl: text("original_url").notNull(),
     canonicalUrl: text("canonical_url").notNull(),
     title: text("title").notNull(),
     normalizedTitle: text("normalized_title").notNull(),
     summary: text("summary").notNull(),
+    author: text("author"),
     category: text("category").notNull(),
-    confirmation: confirmationLevel("confirmation").default("rumor").notNull(),
+    confirmation: confirmationLevel("confirmation").default("unknown").notNull(),
     imageUrl: text("image_url"),
     publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    publishedUpdatedAt: timestamp("published_updated_at", {
+      withTimezone: true,
+    }).notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
     fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
     relatedEntityIds: jsonb("related_entity_ids").$type<string[]>().default([]),
     ...timestamps,
@@ -161,4 +169,3 @@ export const syncRuns = pgTable("sync_runs", {
   recordsWritten: integer("records_written").default(0).notNull(),
   errorMessage: text("error_message"),
 });
-

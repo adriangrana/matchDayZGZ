@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { NewsArticle } from "../src/domain/models";
-import { deduplicateNews } from "../src/services/news-deduplication";
+import {
+  deduplicateNews,
+  groupRelatedNews,
+} from "../src/services/news-deduplication";
 
 const source = {
   id: "test",
   name: "Fuente test",
   url: "https://example.com",
   fetchedAt: "2026-07-27T10:00:00.000Z",
+  isOfficial: false,
 };
 
 function article(
@@ -19,23 +23,26 @@ function article(
     id,
     title,
     summary: "Resumen breve de prueba.",
+    originalUrl: `https://example.com/${id}`,
     canonicalUrl: `https://example.com/${id}`,
     publishedAt: "2026-07-27T09:00:00.000Z",
+    updatedAt: "2026-07-27T09:00:00.000Z",
     category: "plantilla",
     confirmation: "rumor",
     source,
     relatedEntityIds: ["jugador-1"],
+    syncedAt: "2026-07-27T10:00:00.000Z",
     ...overrides,
   };
 }
 
-test("elimina URLs canónicas repetidas aunque cambien los parámetros", () => {
+test("elimina URLs canónicas repetidas", () => {
   const result = deduplicateNews([
     article("a", "Primer titular", {
-      canonicalUrl: "https://example.com/noticia?utm_source=test",
+      canonicalUrl: "https://example.com/noticia",
     }),
     article("b", "Otro titular", {
-      canonicalUrl: "https://example.com/noticia#detalle",
+      canonicalUrl: "https://example.com/noticia",
     }),
   ]);
 
@@ -51,7 +58,8 @@ test("agrupa titulares similares del mismo día y prioriza el oficial", () => {
     "official",
     "Nueva sesión de entrenamiento completada por el Zaragoza",
     {
-      confirmation: "oficial",
+      confirmation: "official",
+      source: { ...source, isOfficial: true },
       summary: "Resumen oficial y más completo de la sesión de entrenamiento.",
     },
   );
@@ -60,6 +68,19 @@ test("agrupa titulares similares del mismo día y prioriza el oficial", () => {
 
   assert.equal(result.length, 1);
   assert.equal(result[0]?.id, "official");
+});
+
+test("conserva las fuentes alternativas dentro de la cobertura relacionada", () => {
+  const groups = groupRelatedNews([
+    article("a", "El Zaragoza completa una sesión de entrenamiento"),
+    article("b", "El Zaragoza completa una sesión de entrenamiento", {
+      source: { ...source, id: "second", name: "Segunda fuente" },
+    }),
+  ]);
+
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0]?.sourceCount, 2);
+  assert.equal(groups[0]?.related.length, 1);
 });
 
 test("conserva acontecimientos distintos", () => {
@@ -72,4 +93,3 @@ test("conserva acontecimientos distintos", () => {
 
   assert.equal(result.length, 2);
 });
-

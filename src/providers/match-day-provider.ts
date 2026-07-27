@@ -8,6 +8,7 @@ import type {
 export interface ProviderContext {
   signal?: AbortSignal;
   now?: Date;
+  force?: boolean;
 }
 
 export interface SportsProvider {
@@ -25,4 +26,3 @@ export interface MatchDayProvider {
   readonly id: string;
   getSnapshot(context?: ProviderContext): Promise<MatchDaySnapshot>;
 }
-

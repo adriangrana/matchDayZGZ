@@ -15,6 +15,7 @@ const demoSource: SourceReference = {
   name: "Datos de demostración",
   url: "https://example.invalid/matchday-zgz-demo",
   fetchedAt,
+  isOfficial: false,
 };
 
 export const realZaragoza: Team = {
@@ -163,36 +164,45 @@ const news: NewsArticle[] = [
     title: "La plantilla completa una nueva sesión de pretemporada",
     summary:
       "El equipo continúa afinando su preparación con trabajo de campo y ejercicios tácticos antes del inicio liguero.",
+    originalUrl: "https://example.invalid/noticias/pretemporada",
     canonicalUrl: "https://example.invalid/noticias/pretemporada",
     publishedAt: "2026-07-27T10:20:00.000Z",
+    updatedAt: "2026-07-27T10:20:00.000Z",
     category: "entrenamientos",
-    confirmation: "oficial",
+    confirmation: "unknown",
     source: demoSource,
     relatedEntityIds: ["real-zaragoza"],
+    syncedAt: fetchedAt,
   },
   {
     id: "news-2",
     title: "El cuerpo técnico perfila el plan para el primer partido",
     summary:
       "La carga física baja progresivamente mientras el grupo comienza a trabajar situaciones específicas de competición.",
+    originalUrl: "https://example.invalid/noticias/plan-primer-partido",
     canonicalUrl: "https://example.invalid/noticias/plan-primer-partido",
     publishedAt: "2026-07-27T08:05:00.000Z",
+    updatedAt: "2026-07-27T08:05:00.000Z",
     category: "plantilla",
-    confirmation: "muy_probable",
+    confirmation: "unknown",
     source: demoSource,
     relatedEntityIds: ["real-zaragoza", "cd-mirandes"],
+    syncedAt: fetchedAt,
   },
   {
     id: "news-3",
     title: "La campaña de abonados entra en su recta final",
     summary:
       "El club recuerda los últimos plazos de la campaña y prepara la atención presencial para los próximos días.",
+    originalUrl: "https://example.invalid/noticias/abonados",
     canonicalUrl: "https://example.invalid/noticias/abonados",
     publishedAt: "2026-07-26T17:40:00.000Z",
+    updatedAt: "2026-07-26T17:40:00.000Z",
     category: "abonados",
-    confirmation: "oficial",
+    confirmation: "unknown",
     source: demoSource,
     relatedEntityIds: ["real-zaragoza"],
+    syncedAt: fetchedAt,
   },
 ];
 
@@ -208,4 +218,3 @@ export const demoSnapshot: MatchDaySnapshot = {
   freshness: "fresh",
   isDemo: true,
 };
-

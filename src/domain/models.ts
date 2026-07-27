@@ -11,21 +11,24 @@ export type NewsCategory =
   | "partidos"
   | "entrenamientos"
   | "cantera"
-  | "club"
+  | "abonados"
   | "estadio"
-  | "abonados";
+  | "institucional"
+  | "otros";
 export type ConfirmationLevel =
-  | "oficial"
-  | "muy_probable"
-  | "en_negociacion"
+  | "official"
+  | "confirmed"
+  | "negotiation"
   | "rumor"
-  | "descartado";
+  | "dismissed"
+  | "unknown";
 
 export interface SourceReference {
   id: string;
   name: string;
   url: string;
   fetchedAt: IsoDateString;
+  isOfficial?: boolean;
 }
 
 export interface Team {
@@ -78,13 +81,32 @@ export interface NewsArticle {
   id: string;
   title: string;
   summary: string;
+  originalUrl: string;
   canonicalUrl: string;
+  author?: string;
   publishedAt: IsoDateString;
+  updatedAt: IsoDateString;
   category: NewsCategory;
   confirmation: ConfirmationLevel;
   source: SourceReference;
   imageUrl?: string;
   relatedEntityIds: string[];
+  syncedAt: IsoDateString;
+}
+
+export interface NewsGroup {
+  primary: NewsArticle;
+  related: NewsArticle[];
+  sourceCount: number;
+  relevanceScore: number;
+}
+
+export interface NewsFeedSnapshot {
+  groups: NewsGroup[];
+  syncedAt: IsoDateString;
+  stale: boolean;
+  mode: "real" | "demo";
+  sourceErrors: string[];
 }
 
 export interface MatchDaySnapshot {
@@ -98,4 +120,3 @@ export interface MatchDaySnapshot {
   freshness: Freshness;
   isDemo: boolean;
 }
-
