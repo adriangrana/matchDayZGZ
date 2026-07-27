@@ -9,6 +9,7 @@ import {
   ApiFootballProvider,
 } from "@/src/providers/api-football-provider";
 import { DemoMatchDayProvider } from "@/src/providers/demo-match-day-provider";
+import { getFreeSportsDashboardSnapshot } from "@/src/services/free-sports-dashboard";
 import {
   SportsRequestLimitError,
   SportsStateStore,
@@ -157,7 +158,17 @@ async function synchronizeSports(
   now: Date,
 ): Promise<SportsDashboardSnapshot> {
   const store = new SportsStateStore();
-  if (process.env.SPORTS_DATA_MODE !== "real") {
+  const selectedProvider = process.env.SPORTS_PROVIDER?.trim() || "free-web";
+  if (selectedProvider === "free-web") {
+    const snapshot = getFreeSportsDashboardSnapshot(now);
+    return (
+      snapshot ??
+      (await demoSportsSnapshot(store, [
+        "El calendario gratuito no contiene un próximo partido válido",
+      ]))
+    );
+  }
+  if (selectedProvider !== "api-football") {
     return demoSportsSnapshot(store);
   }
 
@@ -188,7 +199,7 @@ async function synchronizeSports(
   const state = await store.read();
   if (!store.isPersistent()) {
     return demoSportsSnapshot(store, [
-      "La web local usa un runtime sin escritura de archivos; ejecuta npm run sync:sports para probar API-Football sin exponer la clave",
+      "La web local usa un runtime sin escritura de archivos; prueba el adaptador opcional desde su script local para no exponer la clave",
     ]);
   }
   const durations = cacheHours();

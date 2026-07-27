@@ -1,8 +1,9 @@
 # MatchDay ZGZ
 
 Aplicación web móvil y de escritorio para seguir la actualidad del Real Zaragoza.
-Actualidad consume feeds RSS reales. Los datos deportivos pueden usar el modo demo
-o API-Football como prototipo exclusivamente local y personal.
+Actualidad consume feeds RSS reales. Los datos deportivos usan una estrategia
+gratuita y local basada en el calendario oficial de la RFEF, confirmaciones del
+Real Zaragoza y clasificación calculada.
 
 ## Requisitos
 
@@ -29,7 +30,9 @@ npm test             # pruebas unitarias
 npm run build        # build de producción
 npm run sync:demo    # ejecuta el pipeline demo sin llamadas externas
 npm run sync:news    # sincroniza y valida las noticias reales
-npm run sync:sports  # prueba la sincronización deportiva local
+npm run sports:sync         # sincroniza las fuentes deportivas gratuitas
+npm run sports:inspect      # muestra extracción, caché, diferencias y cuota
+npm run sports:test-sources # comprueba robots y política de cada fuente
 npm run db:generate  # genera migraciones Drizzle
 ```
 
@@ -44,8 +47,8 @@ claves privadas.
 | `DATABASE_URL` | Conexión PostgreSQL/Supabase para servidor y migraciones |
 | `SUPABASE_URL` | URL del proyecto Supabase (fase 2) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave privada solo para procesos de servidor |
-| `SPORTS_DATA_MODE` | `demo` por defecto; `real` activa API-Football local |
-| `API_FOOTBALL_KEY` | Clave privada, solo en `.env.local` y servidor |
+| `SPORTS_PROVIDER` | `free-web` activa la estrategia gratuita principal |
+| `API_FOOTBALL_KEY` | Clave opcional del adaptador desactivado; no es necesaria |
 | `API_FOOTBALL_BASE_URL` | Endpoint oficial; normalmente no se modifica |
 | `API_FOOTBALL_SEASON` | Año de inicio de temporada; el plan Free permite actualmente hasta `2024` |
 | `API_FOOTBALL_TEAM_ID` | ID opcional; vacío permite descubrimiento automático |
@@ -70,20 +73,21 @@ La UI depende de contratos en `src/providers`, no de APIs concretas.
 adaptadores `RssNewsProvider`, se validan, normalizan, clasifican y agrupan antes de
 exponerse a la presentación.
 
-No se realiza scraping ni se usa ninguna API de pago. La UI nunca conoce
-API-Football: consume contratos normalizados del servidor y vuelve al modo demo si
-falta la clave o no existe todavía un snapshot real válido.
+No se usa ninguna API ni servicio de pago. La UI consume contratos normalizados,
+no las fuentes externas. El calendario RFEF se comprueba una vez al día; las
+páginas públicas permitidas del club, como máximo cada seis horas. AS se mantiene
+desactivado porque su aviso legal reserva el uso mediante lectura mecánica, aunque
+sus rutas no estén bloqueadas en `robots.txt`.
 
-La integración deportiva está autorizada únicamente en local y no incorpora
-logotipos, escudos, fotografías ni otros activos visuales de la API. Su estado se
-guarda en `.cache/api-football-state.json`, que está ignorado por Git. El contador
-interno registra cada intento HTTP, incluidos los reintentos, y bloquea nuevas
-consultas al llegar a 50 por día UTC.
+La integración es exclusivamente local y no incorpora logotipos, escudos,
+fotografías ni artículos. Conserva ETag, Last-Modified, hash y el último snapshot
+en `.cache/`, ignorado por Git. Una copia normalizada y validada de las 38 jornadas
+permite mantener el calendario cuando una fuente no responde.
 
-Consulta [`docs/API_FOOTBALL_SETUP.md`](./docs/API_FOOTBALL_SETUP.md) para crear la
-cuenta, guardar la clave y ejecutar la primera sincronización. La comparativa y la
-restricción de publicación se documentan en
-[`docs/SPORTS_SOURCES.md`](./docs/SPORTS_SOURCES.md).
+Consulta
+[`docs/FREE_SCRAPING_STRATEGY.md`](./docs/FREE_SCRAPING_STRATEGY.md) para revisar
+robots, condiciones, selectores, frecuencias, riesgos y fallbacks. API-Football
+permanece únicamente como adaptador opcional desactivado.
 
 ### Fuentes de Actualidad
 

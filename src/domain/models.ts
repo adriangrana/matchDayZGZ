@@ -2,7 +2,7 @@ export type IsoDateString = string;
 
 export type Freshness = "fresh" | "stale" | "unknown";
 export type MatchStatus = "scheduled" | "live" | "finished" | "postponed";
-export type ScheduleStatus = "confirmed" | "provisional";
+export type ScheduleStatus = "confirmed" | "provisional" | "unknown";
 export type VenueSide = "home" | "away";
 export type NewsCategory =
   | "oficial"
@@ -73,6 +73,8 @@ export interface StandingEntry {
   won: number;
   drawn: number;
   lost: number;
+  goalsFor?: number;
+  goalsAgainst?: number;
   goalDifference: number;
   points: number;
 }

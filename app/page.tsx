@@ -27,6 +27,18 @@ function formatTime(value: string) {
   return timeFormatter.format(new Date(value));
 }
 
+function kickoffLabel(match: Match) {
+  if (match.scheduleStatus === "confirmed") return formatTime(match.startsAt);
+  if (match.scheduleStatus === "provisional") return "Provisional";
+  return "Por confirmar";
+}
+
+function scheduleLabel(match: Match) {
+  if (match.scheduleStatus === "confirmed") return "Horario confirmado";
+  if (match.scheduleStatus === "provisional") return "Horario provisional";
+  return "Fecha base de jornada";
+}
+
 function formatUpdatedAt(value: string) {
   return new Intl.DateTimeFormat("es-ES", {
     day: "2-digit",
@@ -62,7 +74,7 @@ function MatchRow({
         <span>{venueSide}</span>
       </div>
       {upcoming ? (
-        <span className="match-time">{formatTime(match.startsAt)}</span>
+        <span className="match-time">{kickoffLabel(match)}</span>
       ) : (
         <strong className="match-score">
           {match.score?.home ?? "–"} <span>:</span> {match.score?.away ?? "–"}
@@ -92,13 +104,13 @@ export default async function Home() {
               <DemoBadge
                 label={
                   snapshot.mode === "real"
-                    ? "API-Football local"
+                    ? "Fuentes públicas"
                     : "Datos deportivos demo"
                 }
-                mark={snapshot.mode === "real" ? "A" : "D"}
+                mark={snapshot.mode === "real" ? "F" : "D"}
                 title={
                   snapshot.mode === "real"
-                    ? "Datos deportivos de API-Football para uso local"
+                    ? "Calendario oficial RFEF para uso local"
                     : "Los datos deportivos visibles son ficticios"
                 }
               />
@@ -119,7 +131,7 @@ export default async function Home() {
                   <span id="next-match-title">Próximo partido</span>
                 </div>
                 <span className="schedule-pill">
-                  Horario {nextMatch.scheduleStatus}
+                  {scheduleLabel(nextMatch)}
                 </span>
               </div>
 
@@ -138,7 +150,7 @@ export default async function Home() {
                 </div>
                 <div className="versus">
                   <span>VS</span>
-                  <small>{formatTime(nextMatch.startsAt)}</small>
+                  <small>{kickoffLabel(nextMatch)}</small>
                 </div>
                 <div className="team-block team-block-away">
                   <TeamMark team={nextMatch.awayTeam} featured />
@@ -154,7 +166,7 @@ export default async function Home() {
                   <span className="detail-icon" aria-hidden="true">◷</span>
                   <span>
                     <strong>{formatDate(nextMatch.startsAt)}</strong>
-                    {formatTime(nextMatch.startsAt)} h
+                    {kickoffLabel(nextMatch)}
                   </span>
                 </div>
                 <div>
@@ -166,10 +178,20 @@ export default async function Home() {
                 </div>
               </div>
 
-              <Countdown
-                targetDate={nextMatch.startsAt}
-                initialNow={renderedAt}
-              />
+              {nextMatch.scheduleStatus === "confirmed" ? (
+                <Countdown
+                  targetDate={nextMatch.startsAt}
+                  initialNow={renderedAt}
+                />
+              ) : (
+                <div
+                  className="countdown countdown-pending"
+                  aria-label="Horario pendiente de confirmación"
+                >
+                  <span className="countdown-label">Calendario RFEF</span>
+                  <strong>Horario y estadio por confirmar</strong>
+                </div>
+              )}
             </article>
 
             <aside className="brief-card" aria-labelledby="brief-title">
@@ -180,7 +202,7 @@ export default async function Home() {
               <div className="brief-footer">
                 <span>
                   {snapshot.mode === "real"
-                    ? "API-Football · Uso local"
+                    ? "RFEF · Uso local"
                     : "Resumen automático · Demo"}
                 </span>
                 <span>Actualizado {formatUpdatedAt(snapshot.generatedAt)}</span>
@@ -210,9 +232,15 @@ export default async function Home() {
                 <span>{snapshot.recentMatches.length} partidos</span>
               </div>
               <div className="match-list">
-                {snapshot.recentMatches.map((match) => (
-                  <MatchRow key={match.id} match={match} />
-                ))}
+                {snapshot.recentMatches.length > 0 ? (
+                  snapshot.recentMatches.map((match) => (
+                    <MatchRow key={match.id} match={match} />
+                  ))
+                ) : (
+                  <p className="panel-empty">
+                    La temporada todavía no ha comenzado.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -325,7 +353,7 @@ export default async function Home() {
 
         <section className="demo-notice page-container" aria-label="Aviso de datos">
           <div className="demo-notice-mark" aria-hidden="true">
-            {snapshot.mode === "real" ? "A" : "D"}
+            {snapshot.mode === "real" ? "F" : "D"}
           </div>
           <div>
             <strong>
@@ -335,9 +363,9 @@ export default async function Home() {
             </strong>
             <p>
               {snapshot.mode === "real"
-                ? `API-Football se usa únicamente en local. Última actualización: ${formatUpdatedAt(
+                ? `Calendario oficial RFEF normalizado para uso local. Las fechas son bases de jornada hasta que el club confirme los horarios. Última comprobación: ${formatUpdatedAt(
                     snapshot.generatedAt,
-                  )}. No se muestran imágenes suministradas por la API.`
+                  )}. AS está desactivado por sus condiciones accesibles.`
                 : snapshot.sourceErrors[0] ??
                   "Los partidos, resultados y posiciones son ficticios. Actualidad utiliza fuentes RSS reales."}
             </p>

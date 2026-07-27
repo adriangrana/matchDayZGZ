@@ -1,4 +1,9 @@
-# Configuración local de API-Football
+# Adaptador opcional de API-Football
+
+> Este adaptador está desactivado. MatchDay ZGZ usa
+> `SPORTS_PROVIDER=free-web` y no necesita cuenta, clave ni plan de
+> API-Football. Este documento se conserva únicamente como referencia del
+> adaptador sustituible.
 
 Esta integración está aprobada únicamente como prototipo local y de uso
 personal. No se deben publicar sus datos sin aclarar previamente los derechos
@@ -38,7 +43,7 @@ Copy-Item .env.example .env.local
 Edita únicamente tu copia local y configura:
 
 ```dotenv
-SPORTS_DATA_MODE=real
+SPORTS_PROVIDER=api-football
 API_FOOTBALL_KEY=tu_clave_privada
 ```
 
@@ -57,7 +62,7 @@ pago para ampliar ese acceso.
 Ejecuta:
 
 ```powershell
-npm run sync:sports
+node --env-file-if-exists=.env.local --import tsx scripts/sync-sports.ts
 ```
 
 El comando nunca imprime la clave. Los mensajes deben confirmar los metadatos,
@@ -84,7 +89,7 @@ desacoplado y listo para sustituirse sin cambiar la interfaz.
 El runtime web local de Vinext tampoco permite escribir archivos desde el
 renderizado. Por seguridad, la portada no intenta consultar API-Football si no
 puede actualizar de forma duradera el contador de cuota. La sincronización real
-se comprueba con `npm run sync:sports`, que sí usa la caché local ignorada por
+se comprueba con el comando anterior, que sí usa la caché local ignorada por
 Git. Una futura versión con almacenamiento persistente podrá consumir ese
 adaptador desde la web sin modificar la interfaz.
 
