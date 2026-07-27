@@ -92,8 +92,12 @@ enlace original.
   TheSportsDB y Sportmonks en `docs/SPORTS_SOURCES.md`.
 - Verificado: el Real Zaragoza compite en Primera Federación, grupo 2, durante
   la temporada 2026/27; los datos demo de Segunda División no son vigentes.
-- Pendiente de aprobación: API-Football como fuente gratuita de prototipo, ya
-  que sus términos no conceden por sí mismos una licencia de publicación.
+- Completado: adaptador sustituible de API-Football aprobado exclusivamente
+  para prototipo local, gratuito, personal y sin imágenes.
+- Completado: cachés de 6/12/24 horas, límite interno de 50 solicitudes al día,
+  registro local de consumo, reintento limitado y último snapshot válido.
+- Pendiente de configuración local: cuenta gratuita y `API_FOOTBALL_KEY` fuera
+  de Git.
 - No implementado: scraping de RFEF, contratación de Sportmonks o activación de
   cualquier proveedor externo.
 

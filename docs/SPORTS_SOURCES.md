@@ -43,10 +43,11 @@ Es la opción con menor barrera técnica para una primera integración real:
 
 Sin embargo, sus [términos](https://www.api-football.com/terms) indican que el
 servicio no concede una licencia para publicar los datos y que pueden existir
-derechos o restricciones de ligas, federaciones y organizadores. Por este motivo
-no se implementa ni se activa todavía.
+derechos o restricciones de ligas, federaciones y organizadores. Su uso fue
+aprobado el 28 de julio de 2026 exclusivamente para un prototipo gratuito,
+local y personal, sin imágenes ni publicación.
 
-## Estrategia propuesta si se aprueba API-Football
+## Estrategia aprobada para API-Football
 
 1. Crear una cuenta gratuita directamente en API-Football, sin RapidAPI y sin
    introducir un método de pago.
@@ -61,6 +62,9 @@ no se implementa ni se activa todavía.
    modo demo mediante variable de entorno.
 7. No utilizar logotipos o imágenes de la API hasta aclarar sus derechos.
 
+La configuración paso a paso está en
+[`docs/API_FOOTBALL_SETUP.md`](./API_FOOTBALL_SETUP.md).
+
 ## Alternativas
 
 - **Máxima prudencia legal:** mantener el modo demo y solicitar a RFEF una vía
@@ -72,4 +76,3 @@ no se implementa ni se activa todavía.
 - **Extracción RFEF:** estudiar el PDF oficial para el calendario inicial y la
   web para resultados. Esta vía implica scraping/extracción frágil y requiere
   aprobación específica antes de implementarse.
-

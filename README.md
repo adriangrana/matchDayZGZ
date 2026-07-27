@@ -1,8 +1,8 @@
 # MatchDay ZGZ
 
 Aplicación web móvil y de escritorio para seguir la actualidad del Real Zaragoza.
-Los datos deportivos permanecen como demostración, mientras que la sección Actualidad
-consume feeds RSS reales desde el servidor.
+Actualidad consume feeds RSS reales. Los datos deportivos pueden usar el modo demo
+o API-Football como prototipo exclusivamente local y personal.
 
 ## Requisitos
 
@@ -29,6 +29,7 @@ npm test             # pruebas unitarias
 npm run build        # build de producción
 npm run sync:demo    # ejecuta el pipeline demo sin llamadas externas
 npm run sync:news    # sincroniza y valida las noticias reales
+npm run sync:sports  # prueba la sincronización deportiva local
 npm run db:generate  # genera migraciones Drizzle
 ```
 
@@ -43,15 +44,22 @@ claves privadas.
 | `DATABASE_URL` | Conexión PostgreSQL/Supabase para servidor y migraciones |
 | `SUPABASE_URL` | URL del proyecto Supabase (fase 2) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave privada solo para procesos de servidor |
-| `SPORTS_API_BASE_URL` | URL de la fuente deportiva elegida |
-| `SPORTS_API_KEY` | Credencial privada de la fuente deportiva |
+| `SPORTS_DATA_MODE` | `demo` por defecto; `real` activa API-Football local |
+| `API_FOOTBALL_KEY` | Clave privada, solo en `.env.local` y servidor |
+| `API_FOOTBALL_BASE_URL` | Endpoint oficial; normalmente no se modifica |
+| `API_FOOTBALL_SEASON` | Año de inicio de temporada, `2026` para 2026/27 |
+| `API_FOOTBALL_TEAM_ID` | ID opcional; vacío permite descubrimiento automático |
+| `API_FOOTBALL_LEAGUE_ID` | ID opcional; vacío permite descubrimiento automático |
+| `API_FOOTBALL_LEAGUE_NAME` | Nombre esperado de Primera Federación grupo 2 |
+| `API_FOOTBALL_DAILY_LIMIT` | Límite interno; nunca puede superar 50 |
+| `SPORTS_FIXTURES_CACHE_HOURS` | Caché de calendario y resultados, 6 horas |
+| `SPORTS_STANDINGS_CACHE_HOURS` | Caché de clasificación, 12 horas |
+| `SPORTS_METADATA_CACHE_HOURS` | Caché de equipo y competición, 24 horas |
 | `NEWS_FEEDS` | Lista de RSS autorizados separada por comas |
 | `NEWS_DATA_MODE` | `real` para RSS o `demo` para volver temporalmente al fixture |
 | `NEWS_CACHE_MINUTES` | Duración de la caché de noticias; mínimo 5 minutos |
 | `NEWS_IMAGE_VALIDATION_LIMIT` | Máximo de imágenes comprobadas por sincronización |
 | `NEWS_SYNC_SECRET` | Secreto para proteger el endpoint programado |
-| `SYNC_INTERVAL_MINUTES` | Frecuencia normal de actualización |
-| `LIVE_SYNC_INTERVAL_SECONDS` | Frecuencia durante un partido |
 | `DATA_STALE_AFTER_MINUTES` | Umbral para avisar de datos desactualizados |
 | `NEXT_PUBLIC_SITE_URL` | Origen público usado por los metadatos sociales |
 
@@ -62,9 +70,20 @@ La UI depende de contratos en `src/providers`, no de APIs concretas.
 adaptadores `RssNewsProvider`, se validan, normalizan, clasifican y agrupan antes de
 exponerse a la presentación.
 
-No se realiza scraping ni se usa ninguna API de pago. Los marcadores, horarios y
-clasificación siguen siendo ficticios. La evaluación de fuentes se encuentra en
-[`docs/NEWS_SOURCES.md`](./docs/NEWS_SOURCES.md).
+No se realiza scraping ni se usa ninguna API de pago. La UI nunca conoce
+API-Football: consume contratos normalizados del servidor y vuelve al modo demo si
+falta la clave o no existe todavía un snapshot real válido.
+
+La integración deportiva está autorizada únicamente en local y no incorpora
+logotipos, escudos, fotografías ni otros activos visuales de la API. Su estado se
+guarda en `.cache/api-football-state.json`, que está ignorado por Git. El contador
+interno registra cada intento HTTP, incluidos los reintentos, y bloquea nuevas
+consultas al llegar a 50 por día UTC.
+
+Consulta [`docs/API_FOOTBALL_SETUP.md`](./docs/API_FOOTBALL_SETUP.md) para crear la
+cuenta, guardar la clave y ejecutar la primera sincronización. La comparativa y la
+restricción de publicación se documentan en
+[`docs/SPORTS_SOURCES.md`](./docs/SPORTS_SOURCES.md).
 
 ### Fuentes de Actualidad
 
