@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Countdown } from "@/src/components/countdown";
 import { DemoBadge } from "@/src/components/demo-badge";
 import { Header } from "@/src/components/header";
@@ -258,9 +257,9 @@ export default async function Home() {
                     ? "Últimos datos válidos"
                     : "Sincronización activa"}
               </span>
-              <Link href="/actualidad" className="text-link">
+              <a href="/actualidad" className="text-link">
                 Toda la actualidad <span aria-hidden="true">→</span>
-              </Link>
+              </a>
             </div>
           </div>
           {newsSnapshot.groups.length > 0 ? (

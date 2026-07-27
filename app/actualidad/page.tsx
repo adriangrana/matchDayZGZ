@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Header } from "@/src/components/header";
 import { NewsCard } from "@/src/components/news-card";
 import type { NewsCategory, NewsGroup } from "@/src/domain/models";
@@ -125,7 +124,7 @@ export default async function NewsPage({
 
         <nav className="category-tabs" aria-label="Filtrar por categoría">
           {categories.map((item) => (
-            <Link
+            <a
               className={category === item.value ? "active" : ""}
               href={`/actualidad${queryString({
                 category: item.value,
@@ -135,7 +134,7 @@ export default async function NewsPage({
               key={item.value}
             >
               {item.label}
-            </Link>
+            </a>
           ))}
         </nav>
 
@@ -161,7 +160,7 @@ export default async function NewsPage({
             {totalPages > 1 && (
               <nav className="pagination" aria-label="Paginación">
                 {page > 1 ? (
-                  <Link
+                  <a
                     href={`/actualidad${queryString({
                       q: query,
                       category,
@@ -170,7 +169,7 @@ export default async function NewsPage({
                     })}`}
                   >
                     ← Anterior
-                  </Link>
+                  </a>
                 ) : (
                   <span />
                 )}
@@ -178,7 +177,7 @@ export default async function NewsPage({
                   Página {page} de {totalPages}
                 </span>
                 {page < totalPages ? (
-                  <Link
+                  <a
                     href={`/actualidad${queryString({
                       q: query,
                       category,
@@ -187,7 +186,7 @@ export default async function NewsPage({
                     })}`}
                   >
                     Siguiente →
-                  </Link>
+                  </a>
                 ) : (
                   <span />
                 )}
@@ -202,7 +201,7 @@ export default async function NewsPage({
               Prueba otra categoría o elimina la búsqueda. No rellenamos los
               huecos con contenido inventado.
             </p>
-            <Link href="/actualidad">Limpiar filtros</Link>
+            <a href="/actualidad">Limpiar filtros</a>
           </div>
         )}
       </main>

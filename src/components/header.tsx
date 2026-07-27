@@ -1,4 +1,4 @@
-import Link from "next/link";
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { DemoBadge } from "@/src/components/demo-badge";
 
 const links = [
@@ -12,19 +12,19 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="page-container header-inner">
-        <Link className="brand" href="/#inicio" aria-label="MatchDay ZGZ, inicio">
+        <a className="brand" href="/#inicio" aria-label="MatchDay ZGZ, inicio">
           <span className="brand-mark">MZ</span>
           <span className="brand-copy">
             <strong>MatchDay</strong>
             <small>ZGZ</small>
           </span>
-        </Link>
+        </a>
 
         <nav aria-label="Navegación principal">
           {links.map(([label, href]) => (
-            <Link href={href} key={href}>
+            <a href={href} key={href}>
               {label}
-            </Link>
+            </a>
           ))}
         </nav>
 
