@@ -77,6 +77,15 @@ enlace original.
 - Implementar RSS o API autorizada para noticias.
 - Persistencia real, cron, caché y panel de salud de sincronización.
 
+#### Estado de Actualidad
+
+- Completado: evaluación de fuentes y selección de cuatro RSS editoriales gratuitos.
+- Completado: normalización, validación, clasificación, deduplicación y relevancia.
+- Completado: caché en servidor, último snapshot válido y endpoint protegido para cron.
+- Completado: portada real y página `/actualidad` con búsqueda y filtros.
+- Pendiente de aprobación: persistencia Supabase y fuente oficial del club.
+- Pendiente: resultados y clasificación reales, fuera del alcance de esta iteración.
+
 ### Fase 3 — profundidad deportiva
 
 - Calendario completo con filtros e integración iCalendar.
@@ -97,4 +106,3 @@ enlace original.
 - Scraping de una web sin API/RSS estable.
 - Activación de Supabase y creación de recursos externos.
 - Publicación, dominio, analítica o notificaciones push.
-
