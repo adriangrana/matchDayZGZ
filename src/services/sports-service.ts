@@ -176,16 +176,14 @@ async function synchronizeSports(
     stateStore: store,
   });
   const season = Math.floor(
-    positiveNumber(process.env.API_FOOTBALL_SEASON, now.getUTCFullYear()),
+    positiveNumber(process.env.API_FOOTBALL_SEASON, 2024),
   );
   const provider = new ApiFootballProvider(client, {
     season,
     teamId: optionalId(process.env.API_FOOTBALL_TEAM_ID),
     leagueId: optionalId(process.env.API_FOOTBALL_LEAGUE_ID),
     teamName: "Real Zaragoza",
-    leagueName:
-      process.env.API_FOOTBALL_LEAGUE_NAME ||
-      "Primera División RFEF - Group 2",
+    leagueName: process.env.API_FOOTBALL_LEAGUE_NAME?.trim() || undefined,
   });
   const state = await store.read();
   const durations = cacheHours();
@@ -277,7 +275,9 @@ async function synchronizeSports(
   const fallbackReason =
     errors.length > 0
       ? errors
-      : ["API-Football aún no devolvió un calendario completo"];
+      : [
+          `API-Football sincronizó la temporada histórica ${metadata?.season ?? season}, pero no contiene próximos partidos; se conserva el modo demo en la portada`,
+        ];
   return demoSportsSnapshot(store, fallbackReason);
 }
 

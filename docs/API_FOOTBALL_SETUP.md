@@ -42,8 +42,15 @@ SPORTS_DATA_MODE=real
 API_FOOTBALL_KEY=tu_clave_privada
 ```
 
-Mantén los valores predeterminados de temporada, competición, caché y cuota.
-`.env.local` está ignorado por Git.
+Mantén los valores predeterminados de temporada, caché y cuota.
+`API_FOOTBALL_LEAGUE_NAME` se deja vacío para descubrir automáticamente la
+competición de liga del equipo. `.env.local` está ignorado por Git.
+
+El plan gratuito limita actualmente las temporadas disponibles a 2022–2024.
+Por eso la integración real usa `API_FOOTBALL_SEASON=2024`: sirve para validar
+el adaptador con datos históricos, mientras el modo demo conserva la
+experiencia visual de la temporada actual. No se debe contratar un plan de
+pago para ampliar ese acceso.
 
 ## 4. Comprobar la sincronización
 
@@ -53,10 +60,16 @@ Ejecuta:
 npm run sync:sports
 ```
 
-El comando nunca imprime la clave. El resultado debe indicar `mode: "real"`,
-mostrar las fechas de sincronización, el número de partidos y el consumo
-estimado. La primera ejecución usa normalmente cuatro solicitudes: equipo,
-competición, calendario y clasificación.
+El comando nunca imprime la clave. Los mensajes deben confirmar los metadatos,
+el calendario y la clasificación normalizados, además del consumo estimado.
+La primera ejecución usa normalmente cuatro solicitudes: equipo, competición,
+calendario y clasificación.
+
+Como la temporada gratuita más reciente es histórica, no contiene próximos
+partidos en 2026. En ese caso la salida termina en `mode: "demo"` y explica que
+la portada conserva el fallback; esto no indica un fallo de la clave. Los
+mensajes `metadatos validados`, `calendario` y `clasificación` confirman que el
+adaptador real funciona y que su snapshot quedó guardado.
 
 Después inicia o reinicia la aplicación:
 
@@ -64,7 +77,9 @@ Después inicia o reinicia la aplicación:
 npm run dev
 ```
 
-La portada mostrará `API-Football local` y la fecha de última actualización.
+La portada seguirá mostrando datos demo actuales mientras el plan gratuito no
+permita una temporada con próximos partidos. El proveedor permanece
+desacoplado y listo para sustituirse sin cambiar la interfaz.
 
 ## Caché y límites
 
@@ -90,4 +105,3 @@ pueden existir derechos de ligas, federaciones u organizadores. Esta versión:
 - no contiene resultados en directo;
 - no aumenta la frecuencia durante los partidos;
 - no contrata ni activa planes de pago.
-

@@ -47,10 +47,10 @@ claves privadas.
 | `SPORTS_DATA_MODE` | `demo` por defecto; `real` activa API-Football local |
 | `API_FOOTBALL_KEY` | Clave privada, solo en `.env.local` y servidor |
 | `API_FOOTBALL_BASE_URL` | Endpoint oficial; normalmente no se modifica |
-| `API_FOOTBALL_SEASON` | Año de inicio de temporada, `2026` para 2026/27 |
+| `API_FOOTBALL_SEASON` | Año de inicio de temporada; el plan Free permite actualmente hasta `2024` |
 | `API_FOOTBALL_TEAM_ID` | ID opcional; vacío permite descubrimiento automático |
 | `API_FOOTBALL_LEAGUE_ID` | ID opcional; vacío permite descubrimiento automático |
-| `API_FOOTBALL_LEAGUE_NAME` | Nombre esperado de Primera Federación grupo 2 |
+| `API_FOOTBALL_LEAGUE_NAME` | Competición opcional; vacío activa el descubrimiento automático |
 | `API_FOOTBALL_DAILY_LIMIT` | Límite interno; nunca puede superar 50 |
 | `SPORTS_FIXTURES_CACHE_HOURS` | Caché de calendario y resultados, 6 horas |
 | `SPORTS_STANDINGS_CACHE_HOURS` | Caché de clasificación, 12 horas |

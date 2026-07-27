@@ -223,6 +223,41 @@ function comparable(value: string): string {
     .trim();
 }
 
+function teamMatchScore(candidateName: string, expectedName: string): number {
+  const candidate = comparable(candidateName);
+  const expected = comparable(expectedName);
+  if (candidate === expected) return 100;
+
+  if (expected.includes("zaragoza")) {
+    if (
+      /\b(?:women|femenino|femenina|u\d+|juvenil|b)\b/.test(candidate) ||
+      candidate.includes("deportivo aragon")
+    ) {
+      return 0;
+    }
+    if (candidate === "zaragoza") return 90;
+    if (candidate === "real zaragoza") return 85;
+    if (candidate.includes("zaragoza")) return 50;
+  }
+
+  return 0;
+}
+
+function automaticLeagueScore(
+  league: z.infer<typeof leaguesResponseSchema>[number]["league"],
+): number {
+  const name = comparable(league.name);
+  if (
+    name.includes("segunda division") ||
+    name.includes("la liga 2") ||
+    name.includes("laliga hypermotion")
+  ) {
+    return 100;
+  }
+  if (comparable(league.type ?? "") === "league") return 50;
+  return 0;
+}
+
 function abbreviation(name: string): string {
   if (comparable(name) === "real zaragoza") return "RZ";
   const words = name
@@ -298,24 +333,39 @@ export class ApiFootballProvider implements SportsProvider {
     const season = this.options.season;
     let teamId = this.options.teamId ?? cached?.teamId;
     let teamName = this.options.teamName ?? cached?.teamName ?? "Real Zaragoza";
-    let leagueId = this.options.leagueId ?? cached?.leagueId;
+    const cachedForSeason = cached?.season === season ? cached : undefined;
+    let leagueId = this.options.leagueId ?? cachedForSeason?.leagueId;
     let leagueName =
-      this.options.leagueName ??
-      cached?.leagueName ??
-      "Primera División RFEF - Group 2";
+      this.options.leagueName?.trim() || cachedForSeason?.leagueName;
 
     if (!teamId || (context.force && !this.options.teamId)) {
+      const searchTerm = comparable(teamName).includes("zaragoza")
+        ? "Zaragoza"
+        : teamName;
       const teams = teamsResponseSchema.parse(
-        await this.client.get("teams", { search: teamName }, context),
+        await this.client.get("teams", { search: searchTerm }, context),
       );
-      const exact = teams.find(
-        (entry) => comparable(entry.team.name) === comparable(teamName),
-      );
-      if (!exact) {
-        throw new Error(`API-Football no encontró el equipo ${teamName}`);
+      const match = teams
+        .map((entry) => ({
+          entry,
+          score: teamMatchScore(entry.team.name, teamName),
+        }))
+        .filter((candidate) => candidate.score > 0)
+        .sort((first, second) => second.score - first.score)[0]?.entry;
+      if (!match) {
+        const candidates = teams
+          .slice(0, 5)
+          .map((entry) => entry.team.name)
+          .join(", ");
+        const responseDetail = candidates
+          ? ` (resultados recibidos: ${candidates})`
+          : "";
+        throw new Error(
+          `API-Football no encontró el equipo ${teamName}${responseDetail}`,
+        );
       }
-      teamId = exact.team.id;
-      teamName = exact.team.name;
+      teamId = match.team.id;
+      teamName = match.team.name;
     }
 
     if (!leagueId || (context.force && !this.options.leagueId)) {
@@ -326,24 +376,45 @@ export class ApiFootballProvider implements SportsProvider {
           context,
         ),
       );
-      const desiredName = comparable(leagueName);
-      const exact = leagues.find((entry) => {
-        const candidate = comparable(entry.league.name);
-        return (
-          candidate === desiredName ||
-          (candidate.includes("primera division rfef") &&
-            candidate.includes("group 2"))
-        );
-      });
-      if (!exact) {
+      const desiredName = leagueName ? comparable(leagueName) : undefined;
+      const match = desiredName
+        ? leagues.find((entry) => {
+            const candidate = comparable(entry.league.name);
+            return (
+              candidate === desiredName ||
+              (candidate.includes("primera division rfef") &&
+                candidate.includes("group 2"))
+            );
+          })
+        : leagues
+            .map((entry) => ({
+              entry,
+              score: automaticLeagueScore(entry.league),
+            }))
+            .filter((candidate) => candidate.score > 0)
+            .sort((first, second) => second.score - first.score)[0]?.entry;
+      if (!match) {
+        const available = leagues
+          .slice(0, 5)
+          .map((entry) => entry.league.name)
+          .join(", ");
+        const expected = leagueName
+          ? leagueName
+          : "una competición de liga";
+        const responseDetail = available
+          ? ` (competiciones recibidas: ${available})`
+          : "";
         throw new Error(
-          `API-Football no encontró ${leagueName} para la temporada ${season}`,
+          `API-Football no encontró ${expected} para la temporada ${season}${responseDetail}`,
         );
       }
-      leagueId = exact.league.id;
-      leagueName = exact.league.name;
+      leagueId = match.league.id;
+      leagueName = match.league.name;
     }
 
+    if (!leagueName) {
+      throw new Error("API-Football no devolvió el nombre de la competición");
+    }
     this.metadata = { teamId, teamName, leagueId, leagueName, season };
     return this.metadata;
   }

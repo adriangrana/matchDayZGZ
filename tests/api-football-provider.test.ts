@@ -93,6 +93,82 @@ class FixtureTransport implements ApiFootballTransport {
   }
 }
 
+class MetadataTransport implements ApiFootballTransport {
+  async get(endpoint: string): Promise<unknown> {
+    if (endpoint === "teams") {
+      return [
+        { team: { id: 733, name: "Zaragoza B" } },
+        { team: { id: 732, name: "Zaragoza" } },
+      ];
+    }
+    if (endpoint === "leagues") {
+      return [
+        {
+          league: {
+            id: 999,
+            name: "Primera División RFEF - Group 2",
+            type: "League",
+          },
+          seasons: [{ year: 2026, current: true }],
+        },
+      ];
+    }
+    throw new Error(`Endpoint inesperado: ${endpoint}`);
+  }
+}
+
+class FreePlanMetadataTransport implements ApiFootballTransport {
+  async get(endpoint: string): Promise<unknown> {
+    if (endpoint === "teams") {
+      return [{ team: { id: 732, name: "Zaragoza" } }];
+    }
+    if (endpoint === "leagues") {
+      return [
+        {
+          league: { id: 143, name: "Copa del Rey", type: "Cup" },
+          seasons: [{ year: 2024, current: false }],
+        },
+        {
+          league: { id: 141, name: "Segunda División", type: "League" },
+          seasons: [{ year: 2024, current: false }],
+        },
+      ];
+    }
+    throw new Error(`Endpoint inesperado: ${endpoint}`);
+  }
+}
+
+test("descubre Zaragoza aunque el proveedor omita Real y excluye el filial", async () => {
+  const provider = new ApiFootballProvider(new MetadataTransport(), {
+    season: 2026,
+    teamName: "Real Zaragoza",
+    leagueName: "Primera División RFEF - Group 2",
+  });
+
+  const result = await provider.resolveMetadata({
+    now: new Date("2026-07-28T08:00:00.000Z"),
+  });
+
+  assert.equal(result.teamId, 732);
+  assert.equal(result.teamName, "Zaragoza");
+  assert.equal(result.leagueId, 999);
+});
+
+test("elige automáticamente la liga histórica disponible en el plan gratuito", async () => {
+  const provider = new ApiFootballProvider(new FreePlanMetadataTransport(), {
+    season: 2024,
+    teamName: "Real Zaragoza",
+  });
+
+  const result = await provider.resolveMetadata({
+    now: new Date("2026-07-28T08:00:00.000Z"),
+  });
+
+  assert.equal(result.season, 2024);
+  assert.equal(result.leagueId, 141);
+  assert.equal(result.leagueName, "Segunda División");
+});
+
 test("normaliza partidos sin incorporar imágenes de API-Football", async () => {
   const provider = new ApiFootballProvider(new FixtureTransport(), {
     season: 2026,
@@ -132,4 +208,3 @@ test("normaliza y ordena la clasificación de Primera Federación", async () => 
   assert.equal(entries[1]?.goalDifference, 0);
   assert.equal(entries[1]?.team.crestUrl, undefined);
 });
-
