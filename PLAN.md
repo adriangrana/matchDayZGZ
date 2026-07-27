@@ -86,6 +86,17 @@ enlace original.
 - Pendiente de aprobación: persistencia Supabase y fuente oficial del club.
 - Pendiente: resultados y clasificación reales, fuera del alcance de esta iteración.
 
+#### Estado de datos deportivos
+
+- Completado: evaluación de RFEF, LALIGA, API-Football, football-data.org,
+  TheSportsDB y Sportmonks en `docs/SPORTS_SOURCES.md`.
+- Verificado: el Real Zaragoza compite en Primera Federación, grupo 2, durante
+  la temporada 2026/27; los datos demo de Segunda División no son vigentes.
+- Pendiente de aprobación: API-Football como fuente gratuita de prototipo, ya
+  que sus términos no conceden por sí mismos una licencia de publicación.
+- No implementado: scraping de RFEF, contratación de Sportmonks o activación de
+  cualquier proveedor externo.
+
 ### Fase 3 — profundidad deportiva
 
 - Calendario completo con filtros e integración iCalendar.
