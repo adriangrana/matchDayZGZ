@@ -1,0 +1,415 @@
+{
+  "provider": "thesportsdb",
+  "syncedAt": "2026-07-27T23:14:58.856Z",
+  "refreshAfter": "2026-08-03T23:14:58.856Z",
+  "teamFingerprint": "ad-alcorcon|aguilas-fc|algeciras-cf|antequera-cf|atletico-madrileno|cd-teruel|ce-europa|cf-rayo-majadahonda|fc-cartagena|gimnastic-de-tarragona|hercules-de-alicante-cf|juventud-de-torremolinos-cf|real-jaen-cf|real-madrid-castilla|real-murcia-cf|real-zaragoza|sd-huesca|ud-ibiza|ue-sant-andreu|villarreal-cf-b",
+  "records": [
+    {
+      "canonicalTeamId": "aguilas-fc",
+      "canonicalName": "Águilas FC",
+      "aliases": [
+        "Águilas",
+        "Aguilas FC",
+        "Águilas Fútbol Club"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "144249",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/h70lhf1677639069.png",
+      "localAssetPath": "/team-badges/aguilas-fc.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=%C3%81guilas%20FC",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "ad-alcorcon",
+      "canonicalName": "AD Alcorcón",
+      "aliases": [
+        "Alcorcón",
+        "AD Alcorcon"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "134699",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/bu9ngq1537723817.png",
+      "localAssetPath": "/team-badges/ad-alcorcon.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=AD%20Alcorc%C3%B3n",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "algeciras-cf",
+      "canonicalName": "Algeciras CF",
+      "aliases": [
+        "Algeciras",
+        "Algeciras Club de Fútbol"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "138306",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/xfayh61579989400.png",
+      "localAssetPath": "/team-badges/algeciras-cf.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Algeciras%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "fc-cartagena",
+      "canonicalName": "FC Cartagena",
+      "aliases": [
+        "Cartagena",
+        "Fútbol Club Cartagena"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "137446",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/xzrxd71677472112.png",
+      "localAssetPath": "/team-badges/fc-cartagena.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=FC%20Cartagena",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "atletico-madrileno",
+      "canonicalName": "Atlético Madrileño",
+      "aliases": [
+        "Atletico Madrileno",
+        "Atlético Madrid B",
+        "Club Atlético de Madrid B"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "137820",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/zk7lk31719984307.png",
+      "localAssetPath": "/team-badges/atletico-madrileno.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Atl%C3%A9tico%20Madrile%C3%B1o",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "juventud-de-torremolinos-cf",
+      "canonicalName": "Juventud de Torremolinos CF",
+      "aliases": [
+        "Juventud Torremolinos",
+        "Juventud de Torremolinos CF"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "146798",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/4bh1zt1660660153.png",
+      "localAssetPath": "/team-badges/juventud-de-torremolinos-cf.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Juventud%20de%20Torremolinos%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "antequera-cf",
+      "canonicalName": "Antequera CF",
+      "aliases": [
+        "Antequera"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "144237",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/f7brqy1721094011.png",
+      "localAssetPath": "/team-badges/antequera-cf.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Antequera%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "ud-ibiza",
+      "canonicalName": "UD Ibiza",
+      "aliases": [
+        "Ibiza",
+        "Unión Deportiva Ibiza"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "137748",
+      "badgeUrl": "https://www.thesportsdb.com/images/media/team/badge/vtxbel1784094189.png",
+      "localAssetPath": "/team-badges/ud-ibiza.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=UD%20Ibiza",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "ce-europa",
+      "canonicalName": "CE Europa",
+      "aliases": [
+        "Europa"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "144229",
+      "badgeUrl": "https://www.thesportsdb.com/images/media/team/badge/xdfie41784675774.png",
+      "localAssetPath": "/team-badges/ce-europa.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=CE%20Europa",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "real-jaen-cf",
+      "canonicalName": "Real Jaén CF",
+      "aliases": [
+        "Real Jaén",
+        "Real Jaen CF"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "137763",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/may3aj1735056799.png",
+      "localAssetPath": "/team-badges/real-jaen-cf.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Real%20Ja%C3%A9n%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "hercules-de-alicante-cf",
+      "canonicalName": "Hércules de Alicante CF",
+      "aliases": [
+        "Hércules",
+        "Hercules CF"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "133815",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/3evl161711252098.png",
+      "localAssetPath": "/team-badges/hercules-de-alicante-cf.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=H%C3%A9rcules%20de%20Alicante%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "real-murcia-cf",
+      "canonicalName": "Real Murcia CF",
+      "aliases": [
+        "Murcia",
+        "Real Murcia"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "133878",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/zoo96h1747995489.png",
+      "localAssetPath": "/team-badges/real-murcia-cf.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Real%20Murcia%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "sd-huesca",
+      "canonicalName": "SD Huesca",
+      "aliases": [
+        "Huesca",
+        "Sociedad Deportiva Huesca"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "135454",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/tuxusx1447590509.png",
+      "localAssetPath": "/team-badges/sd-huesca.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=SD%20Huesca",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "ue-sant-andreu",
+      "canonicalName": "UE Sant Andreu",
+      "aliases": [
+        "Sant Andreu",
+        "Unió Esportiva Sant Andreu"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "144942",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/v33d1n1685918619.png",
+      "localAssetPath": "/team-badges/ue-sant-andreu.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=UE%20Sant%20Andreu",
+      "image": {
+        "mimeType": "image/png",
+        "width": 500,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "cf-rayo-majadahonda",
+      "canonicalName": "CF Rayo Majadahonda",
+      "aliases": [
+        "Rayo Majadahonda"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "136249",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/k2kkjx1609532963.png",
+      "localAssetPath": "/team-badges/cf-rayo-majadahonda.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=CF%20Rayo%20Majadahonda",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "villarreal-cf-b",
+      "canonicalName": "Villarreal CF \"B\"",
+      "aliases": [
+        "Villarreal B"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "134488",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/6mwply1690219069.png",
+      "localAssetPath": "/team-badges/villarreal-cf-b.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Villarreal%20B",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "gimnastic-de-tarragona",
+      "canonicalName": "Gimnàstic de Tarragona",
+      "aliases": [
+        "Gimnàstic",
+        "Gimnastic de Tarragona",
+        "Nàstic"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "134211",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/tpytry1447591259.png",
+      "localAssetPath": "/team-badges/gimnastic-de-tarragona.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Gimn%C3%A0stic%20de%20Tarragona",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "real-zaragoza",
+      "canonicalName": "Real Zaragoza",
+      "aliases": [
+        "Zaragoza"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "133737",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/sxpwxs1473503702.png",
+      "localAssetPath": "/team-badges/real-zaragoza.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Real%20Zaragoza",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "cd-teruel",
+      "canonicalName": "CD Teruel",
+      "aliases": [
+        "Teruel",
+        "Club Deportivo Teruel"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "142536",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/d8mm071678162748.png",
+      "localAssetPath": "/team-badges/cd-teruel.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=CD%20Teruel",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "real-madrid-castilla",
+      "canonicalName": "Real Madrid Castilla",
+      "aliases": [
+        "Real Madrid B"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "134485",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/djtemm1639480207.png",
+      "localAssetPath": "/team-badges/real-madrid-castilla.png",
+      "syncedAt": "2026-07-27T23:14:58.856Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Real%20Madrid%20Castilla",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    }
+  ],
+  "stats": {
+    "processed": 20,
+    "found": 20,
+    "validated": 20,
+    "rejected": 0,
+    "ambiguous": 0,
+    "missing": 0,
+    "requests": 0,
+    "fromCache": 20
+  }
+}

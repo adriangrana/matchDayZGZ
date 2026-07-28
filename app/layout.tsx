@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Archivo_Black } from "next/font/google";
+import { THEME_INIT_SCRIPT } from "@/src/services/theme";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -25,6 +26,11 @@ export const metadata: Metadata = {
     "Partidos, clasificación y actualidad del Real Zaragoza en una experiencia deportiva rápida y clara.",
   applicationName: "MatchDay ZGZ",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/brand/zg-mark-dark.png", type: "image/png" }],
+    shortcut: "/brand/zg-mark-dark.png",
+    apple: "/brand/zg-mark-light.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -58,8 +64,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#07111f",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f7fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#07111f" },
+  ],
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -68,7 +77,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+          id="matchday-theme-init"
+        />
+      </head>
       <body
         className={`${archivo.variable} ${archivoBlack.variable}`}
         suppressHydrationWarning

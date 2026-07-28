@@ -53,11 +53,21 @@ marcando como oficial una noticia de terceros.
 
 ## Conservación y derechos
 
-- Guardar: identificador, título, resumen breve, URLs, fuente, autor, fechas,
-  categoría, imagen validada, confirmación, entidades y fecha de sincronización.
+- Guardar: identificador, título, resumen breve, URL del artículo, fuente,
+  autor, fechas, categoría, confirmación, entidades y fecha de sincronización.
+- Las imágenes se obtienen de los campos `enclosure`, Media RSS u OpenGraph que
+  el propio feed editorial publica. Se conserva solamente su URL durante la
+  vida del snapshot en memoria; el archivo no se descarga, almacena ni replica.
+- Antes de entregar una URL a la interfaz se aceptan únicamente esquemas HTTP o
+  HTTPS sin credenciales y se comprueba que la respuesta sea una imagen con un
+  tamaño mínimo razonable. La validación tiene timeout y no reintenta de forma
+  ilimitada.
+- La tarjeta reserva desde el primer render una zona de altura fija con fondo
+  local. La imagen remota usa `object-fit: cover`; si la carga falla, el
+  componente la sustituye inmediatamente por el placeholder local MZ. Así se
+  evitan tarjetas rotas y saltos de diseño.
 - No guardar ni mostrar: cuerpo completo, galerías, contenido tras paywall o material
   no incluido en el feed.
 - Mantener siempre enlace y nombre del editor.
 - Respetar futuras instrucciones `robots`, cambios de términos, retiradas de feed y
   solicitudes de exclusión.
-

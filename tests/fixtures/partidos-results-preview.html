@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MatchDay ZGZ · Story de resultados</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Arial, sans-serif;
+        background: #050b13;
+        color: #f8fbff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 16% 0, rgba(12, 141, 255, 0.15), transparent 30rem),
+          #050b13;
+      }
+      main {
+        margin: 0 auto;
+        max-width: 1240px;
+        padding: 70px 28px;
+      }
+      .eyebrow {
+        color: #27a7ff;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 60px;
+        letter-spacing: -0.06em;
+        margin: 10px 0 14px;
+      }
+      .notice {
+        color: #91a4bb;
+        font-size: 13px;
+        margin-bottom: 42px;
+      }
+      .tabs {
+        border-bottom: 1px solid rgba(146, 180, 216, 0.14);
+        display: flex;
+        gap: 28px;
+      }
+      .tabs span {
+        color: #71879e;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 0 0 14px;
+      }
+      .tabs .active {
+        border-bottom: 2px solid #27a7ff;
+        color: #f8fbff;
+      }
+      .toolbar {
+        align-items: center;
+        border-bottom: 1px solid rgba(146, 180, 216, 0.14);
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+      }
+      .toolbar strong {
+        font-size: 11px;
+      }
+      .toolbar small {
+        background: rgba(12, 141, 255, 0.12);
+        border: 1px solid rgba(39, 167, 255, 0.28);
+        border-radius: 999px;
+        color: #8fd3ff;
+        font-weight: 800;
+        padding: 7px 10px;
+        text-transform: uppercase;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 30px 0 11px;
+      }
+      h2 small {
+        color: #71879e;
+        font-size: 8px;
+        letter-spacing: 0.08em;
+        margin-left: 9px;
+        text-transform: uppercase;
+      }
+      .list {
+        background: #0a1728;
+        border: 1px solid rgba(146, 180, 216, 0.14);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      article {
+        align-items: center;
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 58px 112px minmax(260px, 1fr) 90px 150px 128px;
+        min-height: 92px;
+        padding: 13px 18px;
+      }
+      article + article {
+        border-top: 1px solid rgba(146, 180, 216, 0.14);
+      }
+      .round {
+        font-size: 17px;
+        font-weight: 800;
+      }
+      .date,
+      .meta {
+        display: grid;
+        gap: 4px;
+      }
+      .date strong,
+      .meta strong {
+        font-size: 10px;
+      }
+      .date small,
+      .meta small {
+        color: #71879e;
+        font-size: 8px;
+      }
+      .rival {
+        align-items: center;
+        display: flex;
+        gap: 14px;
+      }
+      .rival img {
+        height: 42px;
+        object-fit: contain;
+        width: 42px;
+      }
+      .rival strong {
+        display: block;
+        font-size: 13px;
+      }
+      .rival small,
+      .condition {
+        color: #91a4bb;
+        font-size: 8px;
+      }
+      .condition {
+        border: 1px solid rgba(146, 180, 216, 0.14);
+        border-radius: 999px;
+        justify-self: start;
+        padding: 6px 9px;
+      }
+      .score {
+        font-size: 27px;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+      }
+      .outcome {
+        display: grid;
+        font-size: 8px;
+        font-weight: 900;
+        gap: 5px;
+        text-transform: uppercase;
+      }
+      .win {
+        color: #43d7a1;
+      }
+      .draw {
+        color: #ffad66;
+      }
+      .loss {
+        color: #ff6a7f;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">Story de pruebas · Datos simulados</div>
+      <h1>Resultados</h1>
+      <p class="notice">
+        Fixture visual aislado: estos marcadores no forman parte de la aplicación ni de sus snapshots.
+      </p>
+      <div class="tabs">
+        <span>Calendario</span>
+        <span class="active">Resultados</span>
+      </div>
+      <div class="toolbar">
+        <strong>3 resultados · del más reciente al más antiguo</strong>
+        <small>Primera Federación</small>
+      </div>
+      <h2>Septiembre de 2026 <small>3 resultados simulados</small></h2>
+      <section class="list" aria-label="Ejemplo de resultados simulados">
+        <article>
+          <div class="round">J4</div>
+          <div class="date"><strong>20 sept</strong><small>Finalizado</small></div>
+          <div class="rival">
+            <img src="http://localhost:3000/team-badges/fc-cartagena.png" alt="" />
+            <div><strong>FC Cartagena</strong><small>Primera Federación</small></div>
+          </div>
+          <span class="condition">Local</span>
+          <strong class="score">2–0</strong>
+          <span class="outcome win">● Victoria</span>
+        </article>
+        <article>
+          <div class="round">J3</div>
+          <div class="date"><strong>13 sept</strong><small>Finalizado</small></div>
+          <div class="rival">
+            <img src="http://localhost:3000/team-badges/juventud-de-torremolinos-cf.png" alt="" />
+            <div><strong>Juventud de Torremolinos CF</strong><small>Primera Federación</small></div>
+          </div>
+          <span class="condition">Visitante</span>
+          <strong class="score">1–1</strong>
+          <span class="outcome draw">● Empate</span>
+        </article>
+        <article>
+          <div class="round">J2</div>
+          <div class="date"><strong>6 sept</strong><small>Finalizado</small></div>
+          <div class="rival">
+            <img src="http://localhost:3000/team-badges/antequera-cf.png" alt="" />
+            <div><strong>Antequera CF</strong><small>Primera Federación</small></div>
+          </div>
+          <span class="condition">Local</span>
+          <strong class="score">0–1</strong>
+          <span class="outcome loss">● Derrota</span>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

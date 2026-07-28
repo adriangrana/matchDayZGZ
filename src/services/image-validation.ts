@@ -2,6 +2,20 @@ import { fetchWithRetry } from "@/src/services/fetch-with-retry";
 
 const minimumBytes = 2_048;
 
+export function isAllowedRemoteImageUrl(imageUrl: string): boolean {
+  try {
+    const parsed = new URL(imageUrl);
+    return (
+      (parsed.protocol === "https:" || parsed.protocol === "http:") &&
+      Boolean(parsed.hostname) &&
+      !parsed.username &&
+      !parsed.password
+    );
+  } catch {
+    return false;
+  }
+}
+
 function validResponse(response: Response): boolean {
   const type = response.headers.get("content-type") ?? "";
   const length = Number(response.headers.get("content-length") ?? minimumBytes);
@@ -11,6 +25,8 @@ function validResponse(response: Response): boolean {
 export async function validateRemoteImage(
   imageUrl: string,
 ): Promise<string | undefined> {
+  if (!isAllowedRemoteImageUrl(imageUrl)) return undefined;
+
   try {
     const head = await fetchWithRetry(
       imageUrl,
@@ -43,4 +59,3 @@ export async function validateRemoteImage(
     return undefined;
   }
 }
-

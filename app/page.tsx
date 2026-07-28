@@ -2,42 +2,18 @@ import { Countdown } from "@/src/components/countdown";
 import { DemoBadge } from "@/src/components/demo-badge";
 import { Header } from "@/src/components/header";
 import { NewsCard } from "@/src/components/news-card";
+import { SiteFooter } from "@/src/components/site-footer";
 import { TeamMark } from "@/src/components/team-mark";
 import type { Match } from "@/src/domain/models";
 import { getNewsSnapshot } from "@/src/services/news-service";
 import { getSportsSnapshot } from "@/src/services/sports-service";
-
-const dateFormatter = new Intl.DateTimeFormat("es-ES", {
-  weekday: "short",
-  day: "2-digit",
-  month: "short",
-});
-
-const timeFormatter = new Intl.DateTimeFormat("es-ES", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Madrid",
-});
-
-function formatDate(value: string) {
-  return dateFormatter.format(new Date(value)).replace(".", "");
-}
-
-function formatTime(value: string) {
-  return timeFormatter.format(new Date(value));
-}
-
-function kickoffLabel(match: Match) {
-  if (match.scheduleStatus === "confirmed") return formatTime(match.startsAt);
-  if (match.scheduleStatus === "provisional") return "Provisional";
-  return "Por confirmar";
-}
-
-function scheduleLabel(match: Match) {
-  if (match.scheduleStatus === "confirmed") return "Horario confirmado";
-  if (match.scheduleStatus === "provisional") return "Horario provisional";
-  return "Fecha base de jornada";
-}
+import {
+  isConfirmedKickoff,
+  kickoffLabel,
+  matchDateLabel,
+  scheduleLabel,
+  venueLabel,
+} from "@/src/services/sports-presenter";
 
 function formatUpdatedAt(value: string) {
   return new Intl.DateTimeFormat("es-ES", {
@@ -65,8 +41,8 @@ function MatchRow({
   return (
     <article className="match-row">
       <div className="match-date">
-        <span>{formatDate(match.startsAt)}</span>
-        <small>{upcoming ? formatTime(match.startsAt) : match.round}</small>
+        <span>{matchDateLabel(match, true)}</span>
+        <small>{match.round}</small>
       </div>
       <TeamMark team={rival} size="small" />
       <div className="match-team">
@@ -96,7 +72,7 @@ export default async function Home() {
 
   return (
     <div className="site-shell">
-      <Header />
+      <Header active="home" />
       <main>
         <section className="hero-section page-container" id="inicio">
           <div className="hero-heading">
@@ -115,7 +91,10 @@ export default async function Home() {
                 }
               />
               <p className="eyebrow">Todo el zaragocismo, en un solo lugar</p>
-              <h1>El partido empieza aquí.</h1>
+              <h1 className="hero-title">
+                <span>El partido</span>
+                <strong>empieza aquí</strong>
+              </h1>
             </div>
             <p className="hero-intro">
               Partidos, clasificación y actualidad en una experiencia rápida,
@@ -165,20 +144,20 @@ export default async function Home() {
                 <div>
                   <span className="detail-icon" aria-hidden="true">◷</span>
                   <span>
-                    <strong>{formatDate(nextMatch.startsAt)}</strong>
+                    <strong>{matchDateLabel(nextMatch)}</strong>
                     {kickoffLabel(nextMatch)}
                   </span>
                 </div>
                 <div>
                   <span className="detail-icon" aria-hidden="true">⌖</span>
                   <span>
-                    <strong>{nextMatch.venue}</strong>
-                    Zaragoza
+                    <strong>{venueLabel(nextMatch)}</strong>
+                    {zaragozaIsHome ? "Local" : "Visitante"}
                   </span>
                 </div>
               </div>
 
-              {nextMatch.scheduleStatus === "confirmed" ? (
+              {isConfirmedKickoff(nextMatch) ? (
                 <Countdown
                   targetDate={nextMatch.startsAt}
                   initialNow={renderedAt}
@@ -189,7 +168,11 @@ export default async function Home() {
                   aria-label="Horario pendiente de confirmación"
                 >
                   <span className="countdown-label">Calendario RFEF</span>
-                  <strong>Horario y estadio por confirmar</strong>
+                  <strong>
+                    {nextMatch.venue
+                      ? "Horario por confirmar"
+                      : "Horario y estadio por confirmar"}
+                  </strong>
                 </div>
               )}
             </article>
@@ -220,16 +203,27 @@ export default async function Home() {
               </p>
               <h2>La jornada, de un vistazo</h2>
             </div>
-            <a href="#partidos" className="text-link">
+            <a href="/partidos" className="text-link">
               Ver calendario <span aria-hidden="true">→</span>
             </a>
           </div>
 
           <div className="dashboard-grid">
-            <div className="panel results-panel">
+            <a
+              className={
+                snapshot.recentMatches.length > 0
+                  ? "panel panel-link-card results-panel"
+                  : "panel panel-link-card results-panel results-panel-empty"
+              }
+              href="/partidos"
+            >
               <div className="panel-heading">
                 <h3>Últimos resultados</h3>
-                <span>{snapshot.recentMatches.length} partidos</span>
+                <span>
+                  {snapshot.recentMatches.length > 0
+                    ? `${snapshot.recentMatches.length} partidos`
+                    : "Temporada 2026/27"}
+                </span>
               </div>
               <div className="match-list">
                 {snapshot.recentMatches.length > 0 ? (
@@ -237,14 +231,18 @@ export default async function Home() {
                     <MatchRow key={match.id} match={match} />
                   ))
                 ) : (
-                  <p className="panel-empty">
-                    La temporada todavía no ha comenzado.
-                  </p>
+                  <div className="results-empty-state">
+                    <span className="results-empty-icon" aria-hidden="true" />
+                    <div>
+                      <strong>Aún no hay resultados oficiales</strong>
+                      <p>La temporada 2026/27 todavía no ha comenzado.</p>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+            </a>
 
-            <div className="panel fixtures-panel">
+            <a className="panel panel-link-card fixtures-panel" href="/partidos">
               <div className="panel-heading">
                 <h3>Próximos encuentros</h3>
                 <span>Horario peninsular</span>
@@ -254,51 +252,63 @@ export default async function Home() {
                   <MatchRow key={match.id} match={match} upcoming />
                 ))}
               </div>
-            </div>
+            </a>
 
-            <div className="panel standing-panel" id="clasificacion">
+            <a className="panel panel-link-card standing-panel" href="/clasificacion">
               <div className="panel-heading">
                 <h3>Clasificación</h3>
                 <span>
                   {snapshot.mode === "real" ? "Datos sincronizados" : "Demo"}
                 </span>
               </div>
-              <div className="standing-header">
-                <span>Pos</span>
-                <span>Equipo</span>
-                <span>PJ</span>
-                <span>DG</span>
-                <span>PTS</span>
-              </div>
-              <div className="standing-list">
-                {snapshot.standings.map((entry) => (
-                  <div
-                    className={
-                      entry.team.id === "real-zaragoza"
-                        ? "standing-row standing-row-highlight"
-                        : "standing-row"
-                    }
-                    key={entry.team.id}
-                  >
-                    <span>{entry.position}</span>
-                    <span className="standing-team">
-                      <TeamMark team={entry.team} size="tiny" />
-                      {entry.team.shortName}
-                    </span>
-                    <span>{entry.played}</span>
-                    <span>{entry.goalDifference}</span>
-                    <strong>{entry.points}</strong>
+              {snapshot.standingsStatus === "complete" ? (
+                <>
+                  <div className="standing-header">
+                    <span>Pos</span>
+                    <span>Equipo</span>
+                    <span>PJ</span>
+                    <span>DG</span>
+                    <span>PTS</span>
                   </div>
-                ))}
-              </div>
+                  <div className="standing-list">
+                    {snapshot.standings.map((entry) => (
+                      <div
+                        className={
+                          entry.team.id === "real-zaragoza"
+                            ? "standing-row standing-row-highlight"
+                            : "standing-row"
+                        }
+                        key={entry.team.id}
+                      >
+                        <span>{entry.position || "—"}</span>
+                        <span className="standing-team">
+                          <TeamMark team={entry.team} size="tiny" />
+                          {entry.team.shortName}
+                        </span>
+                        <span>{entry.played}</span>
+                        <span>{entry.goalDifference}</span>
+                        <strong>{entry.points}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="standings-empty">
+                  <strong>La temporada todavía no ha comenzado</strong>
+                  <p>Clasificación pendiente de resultados completos.</p>
+                </div>
+              )}
               <p className="standing-note">
                 {snapshot.mode === "real"
                   ? `${snapshot.stale ? "Último snapshot válido" : "Actualizada"} ${formatUpdatedAt(
                       snapshot.syncTimes.standings ?? snapshot.generatedAt,
                     )} · ${snapshot.requestUsage.used}/${snapshot.requestUsage.limit} solicitudes estimadas hoy.`
-                  : "La competición aún no ha comenzado. Posiciones ilustrativas."}
+                  : "La temporada todavía no ha comenzado."}
               </p>
-            </div>
+              <span className="panel-full-link">
+                Ver clasificación completa <span aria-hidden="true">→</span>
+              </span>
+            </a>
           </div>
         </section>
 
@@ -351,41 +361,16 @@ export default async function Home() {
           )}
         </section>
 
-        <section className="demo-notice page-container" aria-label="Aviso de datos">
-          <div className="demo-notice-mark" aria-hidden="true">
-            {snapshot.mode === "real" ? "F" : "D"}
-          </div>
-          <div>
-            <strong>
-              {snapshot.mode === "real"
-                ? "Prototipo deportivo local"
-                : "Datos deportivos en modo demostración"}
-            </strong>
-            <p>
-              {snapshot.mode === "real"
-                ? `Calendario oficial RFEF normalizado para uso local. Las fechas son bases de jornada hasta que el club confirme los horarios. Última comprobación: ${formatUpdatedAt(
-                    snapshot.generatedAt,
-                  )}. AS está desactivado por sus condiciones accesibles.`
-                : snapshot.sourceErrors[0] ??
-                  "Los partidos, resultados y posiciones son ficticios. Actualidad utiliza fuentes RSS reales."}
-            </p>
-          </div>
-        </section>
       </main>
 
-      <footer>
-        <div className="page-container footer-inner">
-          <div className="footer-brand">
-            <span className="brand-mark">MZ</span>
-            <span>
-              <strong>MatchDay</strong>
-              <small>ZGZ</small>
-            </span>
-          </div>
-          <p>Hecho en Zaragoza para quienes nunca dejan de creer.</p>
-          <span>Fase 2 · Prototipo local</span>
-        </div>
-      </footer>
+      <SiteFooter
+        generatedAt={snapshot.generatedAt}
+        sourceLabel={
+          snapshot.mode === "real"
+            ? "Calendario oficial RFEF"
+            : "Datos deportivos de demostración"
+        }
+      />
     </div>
   );
 }

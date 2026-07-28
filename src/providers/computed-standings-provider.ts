@@ -58,11 +58,20 @@ export class ComputedStandingsProvider {
       }
     }
 
-    return [...table.values()]
+    const finishedMatches = matches.filter(
+      (match) => match.status === "finished" && match.score,
+    ).length;
+    const entries = [...table.values()]
       .map((entry) => ({
         ...entry,
         goalDifference: entry.goalsFor - entry.goalsAgainst,
-      }))
+      }));
+
+    if (finishedMatches < 380) {
+      return entries;
+    }
+
+    return entries
       .sort(
         (first, second) =>
           second.points - first.points ||
@@ -107,4 +116,3 @@ export class ComputedStandingsProvider {
     return differences;
   }
 }
-

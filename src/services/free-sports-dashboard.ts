@@ -1,35 +1,8 @@
-import fallback from "@/src/data/rfef-group-2-2026-27.json";
-import type {
-  Match,
-  SportsDashboardSnapshot,
-} from "@/src/domain/models";
-import { ComputedStandingsProvider } from "@/src/providers/computed-standings-provider";
-import type { NormalizedGroupMatch } from "@/src/providers/free-sports-types";
-
-const fallbackMatches = fallback.matches as NormalizedGroupMatch[];
-const competition = {
-  id: "primera-federacion-group-2-2026-27",
-  name: "Primera Federación · Grupo II",
-  shortName: "Primera Federación",
-  season: "2026/27",
-};
-
-function toDashboardMatch(match: NormalizedGroupMatch): Match {
-  return {
-    id: match.id,
-    competition,
-    round: match.roundLabel,
-    startsAt: match.startsAt,
-    scheduleStatus: match.kickoffStatus,
-    status: match.status,
-    venue: match.venue ?? "Por confirmar",
-    homeTeam: match.homeTeam,
-    awayTeam: match.awayTeam,
-    score: match.score,
-    source: match.sources[0]!,
-    updatedAt: match.updatedAt,
-  };
-}
+import type { SportsDashboardSnapshot } from "@/src/domain/models";
+import {
+  getSportsCatalogSnapshot,
+  rfefFallbackMatches,
+} from "@/src/services/sports-catalog";
 
 function homeStandings(
   entries: SportsDashboardSnapshot["standings"],
@@ -47,18 +20,8 @@ function homeStandings(
 export function getFreeSportsDashboardSnapshot(
   now = new Date(),
 ): SportsDashboardSnapshot | undefined {
-  const zaragozaMatches = fallbackMatches
-    .filter(
-      (match) =>
-        match.homeTeam.id === "real-zaragoza" ||
-        match.awayTeam.id === "real-zaragoza",
-    )
-    .map(toDashboardMatch)
-    .sort(
-      (first, second) =>
-        new Date(first.startsAt).getTime() -
-        new Date(second.startsAt).getTime(),
-    );
+  const catalog = getSportsCatalogSnapshot();
+  const zaragozaMatches = catalog.matches;
   const nowTime = now.getTime();
   const recentMatches = zaragozaMatches
     .filter((match) => match.status === "finished")
@@ -74,14 +37,17 @@ export function getFreeSportsDashboardSnapshot(
   const nextMatch = upcomingMatches[0];
   if (!nextMatch) return undefined;
 
-  const standings = new ComputedStandingsProvider().compute(fallbackMatches);
-  const syncedAt = fallback.generatedAt;
+  const standings =
+    catalog.standingsStatus === "complete"
+      ? homeStandings(catalog.standings)
+      : [];
+  const syncedAt = catalog.generatedAt;
   const date = now.toISOString().slice(0, 10);
   return {
     nextMatch,
     recentMatches,
     upcomingMatches,
-    standings: homeStandings(standings),
+    standings,
     news: [],
     dailyBrief:
       "Calendario oficial del Grupo II cargado desde la RFEF. Las fechas son la base de cada jornada; el horario y el estadio permanecen pendientes hasta una confirmación oficial.",
@@ -104,8 +70,9 @@ export function getFreeSportsDashboardSnapshot(
       standings: syncedAt,
       metadata: syncedAt,
     },
+    standingsStatus: catalog.standingsStatus,
+    missingGroupResults: catalog.missingGroupResults,
   };
 }
 
-export const rfefFallbackMatches = fallbackMatches;
-
+export { rfefFallbackMatches };

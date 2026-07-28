@@ -3,6 +3,11 @@ export type IsoDateString = string;
 export type Freshness = "fresh" | "stale" | "unknown";
 export type MatchStatus = "scheduled" | "live" | "finished" | "postponed";
 export type ScheduleStatus = "confirmed" | "provisional" | "unknown";
+export type StandingsStatus =
+  | "preseason"
+  | "partial"
+  | "complete"
+  | "unavailable";
 export type VenueSide = "home" | "away";
 export type NewsCategory =
   | "oficial"
@@ -55,14 +60,16 @@ export interface Match {
   id: string;
   competition: Competition;
   round: string;
+  dateBase?: string;
   startsAt: IsoDateString;
   scheduleStatus: ScheduleStatus;
   status: MatchStatus;
-  venue: string;
+  venue?: string;
   homeTeam: Team;
   awayTeam: Team;
   score?: Score;
   source: SourceReference;
+  venueSource?: SourceReference;
   updatedAt: IsoDateString;
 }
 
@@ -98,6 +105,19 @@ export interface SportsDashboardSnapshot extends MatchDaySnapshot {
   sourceErrors: string[];
   requestUsage: DailyRequestUsage;
   syncTimes: SportsSyncTimes;
+  standingsStatus: StandingsStatus;
+  missingGroupResults: number;
+}
+
+export interface SportsCatalogSnapshot {
+  season: string;
+  matches: Match[];
+  standings: StandingEntry[];
+  standingsStatus: StandingsStatus;
+  missingGroupResults: number;
+  generatedAt: IsoDateString;
+  stale: boolean;
+  sourceErrors: string[];
 }
 
 export interface NewsArticle {

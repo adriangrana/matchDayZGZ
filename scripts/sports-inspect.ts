@@ -1,5 +1,6 @@
 import { FreeSportsAggregator } from "../src/services/free-sports-aggregator";
 import { rfefFallbackMatches } from "../src/services/free-sports-dashboard";
+import { getTeamBrandingSnapshot } from "../src/services/team-branding";
 
 const aggregator = new FreeSportsAggregator(rfefFallbackMatches);
 const snapshot = (await aggregator.inspect()) ?? (await aggregator.sync());
@@ -11,6 +12,7 @@ const nextMatch = snapshot.zaragozaMatches.find(
 const results = snapshot.matches.filter(
   (match) => match.status === "finished" && match.score,
 );
+const branding = getTeamBrandingSnapshot();
 
 console.log(
   JSON.stringify(
@@ -37,9 +39,20 @@ console.log(
       reviewRequired: snapshot.reviewRequired,
       lastUpdate: snapshot.syncedAt,
       totalRequests: snapshot.requestCount,
+      teamBadges: {
+        provider: branding.provider,
+        lastUpdate: branding.syncedAt,
+        validated: branding.stats.validated,
+        pending: branding.records
+          .filter((record) => record.validation !== "validated")
+          .map((record) => ({
+            team: record.canonicalName,
+            status: record.validation,
+            reason: record.reason,
+          })),
+      },
     },
     null,
     2,
   ),
 );
-

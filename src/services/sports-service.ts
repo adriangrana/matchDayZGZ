@@ -111,6 +111,12 @@ async function demoSportsSnapshot(
     sourceErrors: errors,
     requestUsage: await store.getUsage(dailyLimit()),
     syncTimes: {},
+    standingsStatus: snapshot.recentMatches.some(
+      (match) => match.status === "finished",
+    )
+      ? "partial"
+      : "preseason",
+    missingGroupResults: 380,
   };
 }
 
@@ -150,6 +156,22 @@ function realDashboardSnapshot(
     sourceErrors: errors,
     requestUsage: usage,
     syncTimes: state.syncTimes,
+    standingsStatus: state.matches.every(
+      (match) => match.status === "finished" && match.score,
+    )
+      ? "complete"
+      : state.matches.some(
+            (match) => match.status === "finished" && match.score,
+          )
+        ? "partial"
+        : "preseason",
+    missingGroupResults: Math.max(
+      0,
+      380 -
+        state.matches.filter(
+          (match) => match.status === "finished" && match.score,
+        ).length,
+    ),
   };
 }
 

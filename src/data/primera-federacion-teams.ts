@@ -84,29 +84,45 @@ for (const team of groupTwoTeams) {
   aliases.set(comparable(team.shortName), team);
 }
 
-[
-  ["Águilas", "Águilas FC"],
-  ["Alcorcón", "AD Alcorcón"],
-  ["Algeciras", "Algeciras CF"],
-  ["Cartagena", "FC Cartagena"],
-  ["Juventud Torremolinos", "Juventud de Torremolinos CF"],
-  ["Ibiza", "UD Ibiza"],
-  ["Real Jaén", "Real Jaén CF"],
-  ["Hércules", "Hércules de Alicante CF"],
-  ["Murcia", "Real Murcia CF"],
-  ["Huesca", "SD Huesca"],
-  ["Sant Andreu", "UE Sant Andreu"],
-  ["Rayo Majadahonda", "CF Rayo Majadahonda"],
-  ["Villarreal B", "Villarreal CF \"B\""],
-  ["Gimnàstic", "Gimnàstic de Tarragona"],
-  ["Nàstic", "Gimnàstic de Tarragona"],
-  ["Zaragoza", "Real Zaragoza"],
-  ["Teruel", "CD Teruel"],
-  ["Real Madrid B", "Real Madrid Castilla"],
-].forEach(([alias, canonical]) => {
-  const team = groupTwoTeams.find((candidate) => candidate.name === canonical);
-  if (team) aliases.set(comparable(alias), team);
-});
+export const groupTwoTeamAliases: Record<string, string[]> = {
+  "aguilas-fc": ["Águilas", "Aguilas FC", "Águilas Fútbol Club"],
+  "ad-alcorcon": ["Alcorcón", "AD Alcorcon"],
+  "algeciras-cf": ["Algeciras", "Algeciras Club de Fútbol"],
+  "fc-cartagena": ["Cartagena", "Fútbol Club Cartagena"],
+  "atletico-madrileno": [
+    "Atletico Madrileno",
+    "Atlético Madrid B",
+    "Club Atlético de Madrid B",
+  ],
+  "juventud-de-torremolinos-cf": [
+    "Juventud Torremolinos",
+    "Juventud de Torremolinos CF",
+  ],
+  "antequera-cf": ["Antequera"],
+  "ud-ibiza": ["Ibiza", "Unión Deportiva Ibiza"],
+  "ce-europa": ["Europa"],
+  "real-jaen-cf": ["Real Jaén", "Real Jaen CF"],
+  "hercules-de-alicante-cf": ["Hércules", "Hercules CF"],
+  "real-murcia-cf": ["Murcia", "Real Murcia"],
+  "sd-huesca": ["Huesca", "Sociedad Deportiva Huesca"],
+  "ue-sant-andreu": ["Sant Andreu", "Unió Esportiva Sant Andreu"],
+  "cf-rayo-majadahonda": ["Rayo Majadahonda"],
+  "villarreal-cf-b": ["Villarreal B"],
+  "gimnastic-de-tarragona": [
+    "Gimnàstic",
+    "Gimnastic de Tarragona",
+    "Nàstic",
+  ],
+  "real-zaragoza": ["Zaragoza"],
+  "cd-teruel": ["Teruel", "Club Deportivo Teruel"],
+  "real-madrid-castilla": ["Real Madrid B"],
+};
+
+for (const [teamId, teamAliases] of Object.entries(groupTwoTeamAliases)) {
+  const team = groupTwoTeams.find((candidate) => candidate.id === teamId);
+  if (!team) continue;
+  teamAliases.forEach((alias) => aliases.set(comparable(alias), team));
+}
 
 export function resolveGroupTwoTeam(value: string): Team | undefined {
   return aliases.get(comparable(value));

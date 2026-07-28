@@ -71,7 +71,7 @@ export default async function NewsPage({
 
   return (
     <div className="site-shell">
-      <Header />
+      <Header active="news" />
       <main className="news-page page-container">
         <div className="news-page-header">
           <p className="eyebrow">Actualidad zaragocista</p>

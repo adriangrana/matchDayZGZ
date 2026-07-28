@@ -13,6 +13,13 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "es",
     orientation: "portrait-primary",
     categories: ["sports", "news"],
+    icons: [
+      {
+        src: "/brand/zg-mark-dark.png",
+        sizes: "256x256",
+        type: "image/png",
+        purpose: "any",
+      },
+    ],
   };
 }
-
