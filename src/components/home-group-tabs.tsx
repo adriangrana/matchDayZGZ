@@ -48,6 +48,8 @@ function updatedLabel(value: string): string {
 
 function FixtureCard({ match, todayDate }: { match: Match; todayDate: string }) {
   const finished = match.status === "finished" && Boolean(match.score);
+  const live = match.status === "live" && Boolean(match.score);
+  const hasScore = finished || live;
   const matchDate = matchDateKey(match);
   const isToday = matchDate === todayDate;
 
@@ -59,7 +61,7 @@ function FixtureCard({ match, todayDate }: { match: Match; todayDate: string }) 
           {matchDateLabel(match, true)}
         </span>
         <span className={finished ? "fixture-status fixture-status-finished" : "fixture-status"}>
-          {finished ? "Final" : kickoffLabel(match)}
+          {live ? "En vivo" : finished ? "Final" : kickoffLabel(match)}
         </span>
       </div>
       <div className="round-fixture-teams">
@@ -67,8 +69,8 @@ function FixtureCard({ match, todayDate }: { match: Match; todayDate: string }) 
           <TeamMark team={match.homeTeam} size="small" />
           <strong>{match.homeTeam.shortName}</strong>
         </div>
-        <div className={finished ? "round-fixture-score" : "round-fixture-versus"}>
-          {finished ? (
+        <div className={hasScore ? "round-fixture-score" : "round-fixture-versus"}>
+          {hasScore ? (
             <>
               <strong>{match.score?.home}</strong>
               <span>–</span>
@@ -133,6 +135,7 @@ export function HomeGroupTabs({
   );
   const active = groups.find((group) => group.key === activeKey) ?? groups[0]!;
   const playedMatches = active.matches.filter((match) => match.status === "finished").length;
+  const liveCount = active.matches.filter((match) => match.status === "live").length;
 
   return (
     <section className="home-groups-card" aria-label="Jornada de Primera Federación">
@@ -158,7 +161,13 @@ export function HomeGroupTabs({
         </div>
         <div className="home-groups-summary">
           <strong>Jornada 1</strong>
-          <span>{playedMatches > 0 ? `${playedMatches} resultado confirmado` : "10 partidos"}</span>
+          <span>
+            {liveCount > 0
+              ? `${liveCount} en vivo`
+              : playedMatches > 0
+                ? `${playedMatches} resultado${playedMatches === 1 ? "" : "s"} confirmado${playedMatches === 1 ? "" : "s"}`
+                : "10 partidos"}
+          </span>
         </div>
       </header>
 
