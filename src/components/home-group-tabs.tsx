@@ -11,7 +11,7 @@ import {
 import type { Match, StandingEntry } from "@/src/domain/models";
 import {
   kickoffLabel,
-  madridDateKey,
+  matchDateKey,
   matchDateLabel,
 } from "@/src/services/sports-presenter";
 
@@ -48,7 +48,7 @@ function updatedLabel(value: string): string {
 
 function FixtureCard({ match, todayDate }: { match: Match; todayDate: string }) {
   const finished = match.status === "finished" && Boolean(match.score);
-  const matchDate = match.dateBase ?? madridDateKey(match.startsAt);
+  const matchDate = matchDateKey(match);
   const isToday = matchDate === todayDate;
 
   return (
