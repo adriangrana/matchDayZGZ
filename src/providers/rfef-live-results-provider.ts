@@ -18,6 +18,8 @@ export const RFEF_LIVE_RESULTS_URL =
   "https://marcadores.rfef.es/pnfg/?accion=1";
 export const RFEF_ROUND_ONE_RESULTS_URL =
   "https://rfef.es/es/noticias/resumenes-vive-la-jornada-1-de-primera-federacion";
+export const SOFASCORE_LIVE_RESULTS_URL =
+  "https://api.sofascore.com/api/v1/sport/football/events/live";
 
 const BROWSER_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152 Safari/537.36";
@@ -27,6 +29,30 @@ const FINISHED_AFTER_MS = 135 * 60 * 1_000;
 interface ResultsFetch {
   patches: OfficialMatchPatch[];
   diagnostics: SourceDiagnostic[];
+}
+
+interface SofascoreTeam {
+  name?: string;
+  shortName?: string;
+}
+
+interface SofascoreScore {
+  current?: number;
+  display?: number;
+  normaltime?: number;
+}
+
+interface SofascoreEvent {
+  startTimestamp?: number;
+  status?: { type?: string; description?: string };
+  homeTeam?: SofascoreTeam;
+  awayTeam?: SofascoreTeam;
+  homeScore?: SofascoreScore;
+  awayScore?: SofascoreScore;
+}
+
+interface SofascoreLivePayload {
+  events?: SofascoreEvent[];
 }
 
 function decodeHtmlEntities(value: string): string {
@@ -104,6 +130,17 @@ function aliasesFor(team: Team): string[] {
   return [...new Set(aliases)].sort((a, b) => b.length - a.length);
 }
 
+function matchesAlias(value: string | undefined, team: Team): boolean {
+  if (!value) return false;
+  const normalized = normalizeTeamName(value);
+  return aliasesFor(team).some(
+    (alias) =>
+      normalized === alias ||
+      normalized.includes(alias) ||
+      alias.includes(normalized),
+  );
+}
+
 function matchingBlock(
   blocks: string[],
   match: NormalizedGroupMatch,
@@ -178,6 +215,59 @@ export function parseRfefResultsHtml(
   return patches;
 }
 
+function numericScore(score: SofascoreScore | undefined): number | undefined {
+  const value = score?.current ?? score?.display ?? score?.normaltime;
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+export function parseSofascoreLivePayload(
+  payload: SofascoreLivePayload,
+  matches: NormalizedGroupMatch[],
+  source: SourceReference,
+): OfficialMatchPatch[] {
+  const patches: OfficialMatchPatch[] = [];
+  for (const event of payload.events ?? []) {
+    const type = event.status?.type?.toLowerCase();
+    const status =
+      type === "inprogress"
+        ? "live"
+        : type === "finished"
+          ? "finished"
+          : type === "postponed" || type === "canceled" || type === "cancelled"
+            ? "postponed"
+            : undefined;
+    if (!status) continue;
+
+    const match = matches.find(
+      (candidate) =>
+        matchesAlias(event.homeTeam?.name ?? event.homeTeam?.shortName, candidate.homeTeam) &&
+        matchesAlias(event.awayTeam?.name ?? event.awayTeam?.shortName, candidate.awayTeam),
+    );
+    if (!match) continue;
+
+    const home = numericScore(event.homeScore);
+    const away = numericScore(event.awayScore);
+    const score =
+      home !== undefined && away !== undefined ? { home, away } : undefined;
+    if ((status === "live" || status === "finished") && !score) continue;
+
+    patches.push({
+      round: match.round,
+      homeTeamName: match.homeTeam.name,
+      awayTeamName: match.awayTeam.name,
+      startsAt:
+        typeof event.startTimestamp === "number"
+          ? new Date(event.startTimestamp * 1_000).toISOString()
+          : match.startsAt,
+      kickoffStatus: "confirmed",
+      score,
+      status,
+      source,
+    });
+  }
+  return patches;
+}
+
 function cookieFrom(response: Response): string | undefined {
   const setCookie = response.headers.get("set-cookie");
   return setCookie?.match(/JSESSIONID=([^;]+)/i)?.[1];
@@ -239,6 +329,30 @@ async function fetchRfefLiveHtml(): Promise<{ html: string; status: number }> {
   return { html, status: response.status };
 }
 
+async function fetchSofascoreLive(): Promise<{
+  payload: SofascoreLivePayload;
+  status: number;
+}> {
+  const response = await fetch(SOFASCORE_LIVE_RESULTS_URL, {
+    headers: {
+      accept: "application/json,text/plain,*/*",
+      origin: "https://www.sofascore.com",
+      referer: "https://www.sofascore.com/",
+      "user-agent": BROWSER_USER_AGENT,
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(8_000),
+  });
+  if (!response.ok) {
+    throw new Error(`Sofascore live devolvió HTTP ${response.status}`);
+  }
+  const payload = (await response.json()) as SofascoreLivePayload;
+  if (!Array.isArray(payload.events)) {
+    throw new Error("Sofascore live devolvió una respuesta sin events");
+  }
+  return { payload, status: response.status };
+}
+
 function diagnostic(
   id: string,
   name: string,
@@ -276,6 +390,7 @@ export class RfefLiveResultsProvider {
     const checkedAt = now.toISOString();
     const diagnostics: SourceDiagnostic[] = [];
     let livePatches: OfficialMatchPatch[] = [];
+    let fallbackLivePatches: OfficialMatchPatch[] = [];
     let articlePatches: OfficialMatchPatch[] = [];
 
     try {
@@ -307,6 +422,42 @@ export class RfefLiveResultsProvider {
           checkedAt,
           0,
           { error: error instanceof Error ? error.message : "Error de Marcadores RFEF" },
+        ),
+      );
+    }
+
+    try {
+      const result = await fetchSofascoreLive();
+      const source: SourceReference = {
+        id: "sofascore-live-fallback",
+        name: "Sofascore · respaldo en vivo",
+        url: SOFASCORE_LIVE_RESULTS_URL,
+        fetchedAt: checkedAt,
+      };
+      fallbackLivePatches = parseSofascoreLivePayload(
+        result.payload,
+        matches,
+        source,
+      );
+      diagnostics.push(
+        diagnostic(
+          "sofascore-live-fallback",
+          "Sofascore · respaldo en vivo",
+          SOFASCORE_LIVE_RESULTS_URL,
+          checkedAt,
+          fallbackLivePatches.length,
+          { httpStatus: result.status },
+        ),
+      );
+    } catch (error) {
+      diagnostics.push(
+        diagnostic(
+          "sofascore-live-fallback",
+          "Sofascore · respaldo en vivo",
+          SOFASCORE_LIVE_RESULTS_URL,
+          checkedAt,
+          0,
+          { error: error instanceof Error ? error.message : "Error del respaldo en vivo" },
         ),
       );
     }
@@ -355,6 +506,7 @@ export class RfefLiveResultsProvider {
     }
 
     const merged = new Map<string, OfficialMatchPatch>();
+    for (const patch of fallbackLivePatches) merged.set(patchKey(patch), patch);
     for (const patch of livePatches) merged.set(patchKey(patch), patch);
     for (const patch of articlePatches) merged.set(patchKey(patch), patch);
 
