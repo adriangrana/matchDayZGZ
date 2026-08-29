@@ -203,7 +203,11 @@ export function HomeGroupTabs({
             {active.standings.slice(0, 8).map((entry, index) => {
               const zone = standingZone(index, active.standings.length);
               return (
-              <div className={`home-table-row home-table-row-${zone}`} key={entry.team.id}>
+              <div
+                className={`home-table-row home-table-row-${zone}`}
+                key={entry.team.id}
+                style={{ background: "transparent" }}
+              >
                 <span className="home-table-position">{index + 1}<span className="sr-only"> · {standingZoneLabel(zone)}</span></span>
                 <TeamMark team={entry.team} size="tiny" />
                 <strong>{entry.team.shortName}</strong>
