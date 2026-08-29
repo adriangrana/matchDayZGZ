@@ -14,6 +14,7 @@ import type {
   SourceDiagnostic,
 } from "@/src/providers/free-sports-types";
 import { RealZaragozaOfficialProvider } from "@/src/providers/real-zaragoza-official-provider";
+import { RfefLiveResultsProvider } from "@/src/providers/rfef-live-results-provider";
 import {
   RfefPdfCalendarProvider,
   RFEF_GROUP_ONE_CALENDAR_URL,
@@ -52,6 +53,17 @@ function samePair(
   );
 }
 
+function sameNormalizedPair(
+  match: NormalizedGroupMatch,
+  patch: OfficialMatchPatch,
+): boolean {
+  return Boolean(
+    (!patch.round || patch.round === match.round) &&
+      normalizeTeamName(patch.homeTeamName) === normalizeTeamName(match.homeTeam.name) &&
+      normalizeTeamName(patch.awayTeamName) === normalizeTeamName(match.awayTeam.name),
+  );
+}
+
 function mergeOfficialPatches(
   calendar: NormalizedGroupMatch[],
   patches: OfficialMatchPatch[],
@@ -62,6 +74,9 @@ function mergeOfficialPatches(
     const index = merged.findIndex((match) => samePair(match, patch));
     if (index >= 0) {
       const current = merged[index]!;
+      const preserveLiveStatus =
+        patch.status === "scheduled" &&
+        (current.status === "live" || current.status === "finished");
       merged[index] = {
         ...current,
         startsAt: patch.startsAt ?? current.startsAt,
@@ -70,7 +85,7 @@ function mergeOfficialPatches(
           : current.kickoffStatus,
         venue: patch.venue ?? current.venue,
         score: patch.score ?? current.score,
-        status: patch.status ?? current.status,
+        status: preserveLiveStatus ? current.status : patch.status ?? current.status,
         sources: [patch.source, ...current.sources],
         updatedAt: patch.source.fetchedAt,
       };
@@ -107,6 +122,25 @@ function mergeOfficialPatches(
       new Date(first.startsAt).getTime() -
       new Date(second.startsAt).getTime(),
   );
+}
+
+export function mergeRfefResultPatches(
+  calendar: NormalizedGroupMatch[],
+  patches: OfficialMatchPatch[],
+): NormalizedGroupMatch[] {
+  return calendar.map((match) => {
+    const patch = patches.find((candidate) => sameNormalizedPair(match, candidate));
+    if (!patch) return match;
+    return {
+      ...match,
+      startsAt: patch.startsAt ?? match.startsAt,
+      kickoffStatus: patch.startsAt ? patch.kickoffStatus : match.kickoffStatus,
+      score: patch.score ?? match.score,
+      status: patch.status ?? match.status,
+      sources: [patch.source, ...match.sources],
+      updatedAt: patch.source.fetchedAt,
+    };
+  });
 }
 
 export function mergeRfefFacts(
@@ -218,7 +252,7 @@ export class FreeSportsAggregator {
       calendar =
         previousCalendar?.length === 380
           ? previousCalendar
-        : this.fallbackMatches;
+          : this.fallbackMatches;
     }
 
     try {
@@ -248,7 +282,22 @@ export class FreeSportsAggregator {
     diagnostics.push(...official.diagnostics);
 
     const calendarWithFacts = mergeRfefFacts(calendar, now.toISOString());
-    const matches = mergeOfficialPatches(calendarWithFacts, official.patches);
+    const liveResults = await new RfefLiveResultsProvider(this.http).getResults(
+      [...calendarWithFacts, ...groupOneCalendar],
+      options,
+    );
+    diagnostics.push(...liveResults.diagnostics);
+
+    const groupTwoWithResults = mergeRfefResultPatches(
+      calendarWithFacts,
+      liveResults.patches,
+    );
+    groupOneCalendar = mergeRfefResultPatches(
+      groupOneCalendar,
+      liveResults.patches,
+    );
+    const matches = mergeOfficialPatches(groupTwoWithResults, official.patches);
+
     const computed = new ComputedStandingsProvider();
     const completeResults = completeRoundResults(matches);
     const standings = computed.compute(
