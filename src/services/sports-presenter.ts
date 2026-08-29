@@ -41,6 +41,13 @@ export function isConfirmedKickoff(match: Match): boolean {
   return !(onlyPdfSource && placeholderHours.has(localClock(match.startsAt)));
 }
 
+export function matchDateKey(match: Match): string {
+  if (isConfirmedKickoff(match)) {
+    return madridDateKey(match.startsAt);
+  }
+  return match.dateBase ?? madridDateKey(match.startsAt);
+}
+
 export function kickoffLabel(match: Match): string {
   return isConfirmedKickoff(match)
     ? localClock(match.startsAt)
