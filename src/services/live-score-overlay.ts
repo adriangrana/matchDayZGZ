@@ -84,7 +84,9 @@ function resetFalseRoundOneArticleMatch(
   };
 }
 
-function sanitizeMatches(matches: NormalizedGroupMatch[]): NormalizedGroupMatch[] {
+export function sanitizeRoundOneArticleResults(
+  matches: NormalizedGroupMatch[],
+): NormalizedGroupMatch[] {
   return matches.map(resetFalseRoundOneArticleMatch);
 }
 
@@ -158,9 +160,11 @@ function overlayEvents(
     byId.set(current.id, {
       ...current,
       startsAt:
-        typeof event.startTimestamp === "number"
-          ? new Date(event.startTimestamp * 1_000).toISOString()
-          : current.startsAt,
+        current.kickoffStatus === "confirmed"
+          ? current.startsAt
+          : typeof event.startTimestamp === "number"
+            ? new Date(event.startTimestamp * 1_000).toISOString()
+            : current.startsAt,
       kickoffStatus: "confirmed",
       status,
       score: score ?? current.score,
@@ -173,7 +177,7 @@ function overlayEvents(
   return { matches: [...byId.values()], extracted };
 }
 
-function inferLiveWindow(
+export function inferMatchesInLiveWindow(
   matches: NormalizedGroupMatch[],
   now: Date,
 ): NormalizedGroupMatch[] {
@@ -264,17 +268,17 @@ export async function applyLiveScoreOverlay(
     fetchedAt: fetched.diagnostic.checkedAt,
   };
 
-  const groupTwoClean = sanitizeMatches(snapshot.matches);
-  const groupOneClean = sanitizeMatches(snapshot.groupOneMatches ?? []);
+  const groupTwoClean = sanitizeRoundOneArticleResults(snapshot.matches);
+  const groupOneClean = sanitizeRoundOneArticleResults(snapshot.groupOneMatches ?? []);
   const allClean = [...groupTwoClean, ...groupOneClean];
   const overlay = overlayEvents(allClean, fetched.events, source, now);
   const overlayById = new Map(overlay.matches.map((match) => [match.id, match]));
 
-  const groupTwo = inferLiveWindow(
+  const groupTwo = inferMatchesInLiveWindow(
     groupTwoClean.map((match) => overlayById.get(match.id) ?? match),
     now,
   );
-  const groupOne = inferLiveWindow(
+  const groupOne = inferMatchesInLiveWindow(
     groupOneClean.map((match) => overlayById.get(match.id) ?? match),
     now,
   );
