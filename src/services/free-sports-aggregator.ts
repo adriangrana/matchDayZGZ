@@ -109,7 +109,7 @@ function mergeOfficialPatches(
   );
 }
 
-function mergeGroupOneFacts(
+export function mergeRfefFacts(
   calendar: NormalizedGroupMatch[],
   fetchedAt: string,
 ): NormalizedGroupMatch[] {
@@ -226,7 +226,10 @@ export class FreeSportsAggregator {
         ...options,
         group: "group-1",
       });
-      groupOneCalendar = mergeGroupOneFacts(rfefGroupOne.matches, rfefGroupOne.diagnostic.checkedAt);
+      groupOneCalendar = mergeRfefFacts(
+        rfefGroupOne.matches,
+        rfefGroupOne.diagnostic.checkedAt,
+      );
       diagnostics.push(rfefGroupOne.diagnostic);
     } catch (error) {
       diagnostics.push(unavailableRfefDiagnostic(now, error, "group-1"));
@@ -244,7 +247,8 @@ export class FreeSportsAggregator {
     ).getOfficialData(options);
     diagnostics.push(...official.diagnostics);
 
-    const matches = mergeOfficialPatches(calendar, official.patches);
+    const calendarWithFacts = mergeRfefFacts(calendar, now.toISOString());
+    const matches = mergeOfficialPatches(calendarWithFacts, official.patches);
     const computed = new ComputedStandingsProvider();
     const completeResults = completeRoundResults(matches);
     const standings = computed.compute(
