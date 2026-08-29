@@ -6,7 +6,10 @@ import {
 } from "../src/data/primera-federacion-teams";
 import type { SourceReference } from "../src/domain/models";
 import type { NormalizedGroupMatch } from "../src/providers/free-sports-types";
-import { parseRfefResultsHtml } from "../src/providers/rfef-live-results-provider";
+import {
+  parseRfefResultsHtml,
+  parseSofascoreLivePayload,
+} from "../src/providers/rfef-live-results-provider";
 
 const source: SourceReference = {
   id: "rfef-live-scoreboard",
@@ -56,6 +59,44 @@ test("extrae un marcador ATR en vivo", () => {
 
   assert.deepEqual(patch?.score, { home: 1, away: 0 });
   assert.equal(patch?.status, "live");
+});
+
+test("usa el feed live de respaldo para Hércules - Real Murcia", () => {
+  const fixture = match(
+    requireGroupTwoTeam("Hércules de Alicante CF"),
+    requireGroupTwoTeam("Real Murcia CF"),
+    "2026-08-29T21:30:00+02:00",
+  );
+  const fallbackSource: SourceReference = {
+    id: "sofascore-live-fallback",
+    name: "Sofascore · respaldo en vivo",
+    url: "https://api.sofascore.com/api/v1/sport/football/events/live",
+    fetchedAt: "2026-08-29T20:32:00.000Z",
+  };
+
+  const [patch] = parseSofascoreLivePayload(
+    {
+      events: [
+        {
+          startTimestamp: Math.floor(
+            new Date("2026-08-29T21:30:00+02:00").getTime() / 1_000,
+          ),
+          status: { type: "inprogress", description: "2nd half" },
+          homeTeam: { name: "Hércules CF" },
+          awayTeam: { name: "Real Murcia" },
+          homeScore: { current: 1 },
+          awayScore: { current: 0 },
+        },
+      ],
+    },
+    [fixture],
+    fallbackSource,
+  );
+
+  assert.equal(patch?.status, "live");
+  assert.deepEqual(patch?.score, { home: 1, away: 0 });
+  assert.equal(patch?.homeTeamName, "Hércules de Alicante CF");
+  assert.equal(patch?.awayTeamName, "Real Murcia CF");
 });
 
 test("marca como final un resultado publicado por RFEF", () => {
