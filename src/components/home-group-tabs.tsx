@@ -48,8 +48,9 @@ function updatedLabel(value: string): string {
 
 function FixtureCard({ match, todayDate }: { match: Match; todayDate: string }) {
   const finished = match.status === "finished" && Boolean(match.score);
-  const live = match.status === "live" && Boolean(match.score);
-  const hasScore = finished || live;
+  const live = match.status === "live";
+  const liveWithScore = live && Boolean(match.score);
+  const hasScore = finished || liveWithScore;
   const matchDate = matchDateKey(match);
   const isToday = matchDate === todayDate;
 
@@ -76,6 +77,8 @@ function FixtureCard({ match, todayDate }: { match: Match; todayDate: string }) 
               <span>–</span>
               <strong>{match.score?.away}</strong>
             </>
+          ) : live ? (
+            <span>—</span>
           ) : (
             <span>VS</span>
           )}
