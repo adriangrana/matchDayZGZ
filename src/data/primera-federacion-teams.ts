@@ -28,7 +28,6 @@ function abbreviation(name: string): string {
 
 function shortName(name: string): string {
   return name
-    .replace("Real Zaragoza", "Zaragoza")
     .replace("Hércules de Alicante CF", "Hércules")
     .replace("Juventud de Torremolinos CF", "Juv. Torremolinos")
     .replace("Gimnàstic de Tarragona", "Gimnàstic")
