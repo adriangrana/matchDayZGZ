@@ -46,3 +46,95 @@ function runara {
 }
 
 . (Join-Path $PSScriptRoot "deploy-local.ps1")
+
+# The core deploy creates the sync runner with a conservative six-hour sports
+# cadence. Replace only that runner after a successful deployment so results can
+# refresh quickly around kick-off while remaining low-volume outside match windows.
+$AdaptiveSyncRunner = "C:\www\matchday-zgz\sync-runner.mjs"
+@'
+const baseUrl = process.env.MATCHDAY_SYNC_BASE_URL || "http://127.0.0.1:3100";
+const secret = process.env.MATCHDAY_SYNC_SECRET;
+const newsMinutes = Math.max(5, Number(process.env.NEWS_CACHE_MINUTES || 30));
+
+if (!secret) {
+  throw new Error("El secreto interno de sincronización no está disponible");
+}
+
+const tasks = [
+  {
+    name: "news",
+    path: "/api/internal/news/sync",
+    intervalMs: newsMinutes * 60_000,
+  },
+  {
+    name: "sports",
+    path: "/api/internal/sports/sync",
+    intervalMs: 5 * 60_000,
+  },
+];
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function nextInterval(task, payload) {
+  if (
+    task.name === "sports" &&
+    Number.isFinite(Number(payload?.nextSportsSyncSeconds))
+  ) {
+    const seconds = Math.max(
+      60,
+      Math.min(6 * 60 * 60, Number(payload.nextSportsSyncSeconds)),
+    );
+    return seconds * 1_000;
+  }
+  return task.intervalMs;
+}
+
+async function synchronize(task) {
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(`${baseUrl}${task.path}`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${secret}` },
+      signal: AbortSignal.timeout(60_000),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.ok !== true) {
+      throw new Error(
+        typeof payload.error === "string"
+          ? payload.error
+          : `Respuesta HTTP ${response.status}`,
+      );
+    }
+    const nextText =
+      task.name === "sports" && Number.isFinite(Number(payload.nextSportsSyncSeconds))
+        ? ` · próxima en ${payload.nextSportsSyncSeconds}s`
+        : "";
+    console.log(
+      `[sync-runner] ${task.name} actualizado en ${Date.now() - startedAt} ms · ${payload.syncedAt}${nextText}`,
+    );
+    return payload;
+  } catch (error) {
+    console.error(
+      `[sync-runner] ${task.name}: ${error instanceof Error ? error.message : "error desconocido"}`,
+    );
+    return undefined;
+  }
+}
+
+async function runTask(task) {
+  while (true) {
+    const payload = await synchronize(task);
+    await wait(nextInterval(task, payload));
+  }
+}
+
+await Promise.all(tasks.map(runTask));
+'@ | Set-Content -LiteralPath $AdaptiveSyncRunner -Encoding utf8
+
+if (Test-RunaraProcess -Name "matchday-zgz-sync") {
+  Invoke-CheckedCommand runara stop "matchday-zgz-sync"
+  Start-Sleep -Milliseconds 350
+  Invoke-CheckedCommand runara start "matchday-zgz-sync"
+}
