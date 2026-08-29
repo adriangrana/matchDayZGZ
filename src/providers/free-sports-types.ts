@@ -23,7 +23,7 @@ export interface NormalizedGroupMatch {
   awayTeam: Team;
   venue?: string;
   score?: Score;
-  status: "scheduled" | "finished" | "postponed";
+  status: "scheduled" | "live" | "finished" | "postponed";
   sources: SourceReference[];
   updatedAt: string;
 }
@@ -78,6 +78,6 @@ export interface OfficialMatchPatch {
   kickoffStatus: KickoffStatus;
   venue?: string;
   score?: Score;
-  status?: "scheduled" | "finished" | "postponed";
+  status?: "scheduled" | "live" | "finished" | "postponed";
   source: SourceReference;
 }
