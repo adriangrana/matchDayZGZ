@@ -6,6 +6,7 @@ import {
   liveMatches,
   liveScoreForTeam,
 } from "@/src/components/live-standings";
+import styles from "@/src/components/standings-live.module.css";
 import { StandingsForm } from "@/src/components/standings-form";
 import {
   sortStandings,
@@ -30,13 +31,13 @@ function formattedSync(value: string): string {
 }
 
 function liveScoreClass(teamId: string, match: Match): string {
-  if (!match.score) return "";
+  if (!match.score) return styles.drawing;
   const isHome = match.homeTeam.id === teamId;
   const goalsFor = isHome ? match.score.home : match.score.away;
   const goalsAgainst = isHome ? match.score.away : match.score.home;
-  if (goalsFor > goalsAgainst) return "is-winning";
-  if (goalsFor < goalsAgainst) return "is-losing";
-  return "is-drawing";
+  if (goalsFor > goalsAgainst) return styles.winning;
+  if (goalsFor < goalsAgainst) return styles.losing;
+  return styles.drawing;
 }
 
 function StandingTable({ snapshot }: { snapshot: Snapshot }) {
@@ -56,8 +57,8 @@ function StandingTable({ snapshot }: { snapshot: Snapshot }) {
       </div>
 
       {hasLive ? (
-        <aside className="standings-live-banner" role="status">
-          <span className="standings-live-dot" aria-hidden="true" />
+        <aside className={styles.liveBanner} role="status">
+          <span className={styles.liveDot} aria-hidden="true" />
           <div>
             <strong>En vivo</strong>
             <p>Clasificación provisional incluyendo los marcadores actuales.</p>
@@ -99,7 +100,7 @@ function StandingTable({ snapshot }: { snapshot: Snapshot }) {
                 "standings-zone-row",
                 `standings-zone-row-${zone}`,
                 entry.team.id === "real-zaragoza" ? "standings-team-highlight" : "",
-                currentScore ? "standings-row-live" : "",
+                currentScore ? styles.liveRow : "",
               ].filter(Boolean).join(" ");
               return (
                 <tr className={classes} key={entry.team.id}>
@@ -107,10 +108,10 @@ function StandingTable({ snapshot }: { snapshot: Snapshot }) {
                   <th scope="row">
                     <span className="standings-team-cell">
                       <TeamMark team={entry.team} size="tiny" />
-                      <span className="standings-team-name">{entry.team.name}</span>
+                      <span className={styles.teamName}>{entry.team.name}</span>
                       {currentScore ? (
                         <span
-                          className={`standings-live-score ${liveScoreClass(entry.team.id, currentScore.match)}`}
+                          className={`${styles.liveScore} ${liveScoreClass(entry.team.id, currentScore.match)}`}
                           title={`${currentScore.match.homeTeam.shortName} ${currentScore.label} ${currentScore.match.awayTeam.shortName}`}
                         >
                           {currentScore.label}
