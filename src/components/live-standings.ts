@@ -6,14 +6,14 @@ export interface LiveStandingScore {
 }
 
 export function liveMatches(matches: Match[]): Match[] {
-  return matches.filter((match) => match.status === "live" && Boolean(match.score));
+  return matches.filter((match) => match.status === "live");
 }
 
 export function applyLiveMatchesToStandings(
   standings: StandingEntry[],
   matches: Match[],
 ): StandingEntry[] {
-  const currentLiveMatches = liveMatches(matches);
+  const currentLiveMatches = liveMatches(matches).filter((match) => Boolean(match.score));
   if (currentLiveMatches.length === 0) return standings;
 
   const table = new Map(
@@ -77,7 +77,8 @@ export function liveScoreForTeam(
 ): LiveStandingScore | undefined {
   const match = liveMatches(matches).find(
     (candidate) =>
-      candidate.homeTeam.id === teamId || candidate.awayTeam.id === teamId,
+      Boolean(candidate.score) &&
+      (candidate.homeTeam.id === teamId || candidate.awayTeam.id === teamId),
   );
   if (!match?.score) return undefined;
   return {
