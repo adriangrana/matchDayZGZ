@@ -1,6 +1,7 @@
 import { FreeSportsAggregator } from "@/src/services/free-sports-aggregator";
 import { applyLiveScoreOverlay } from "@/src/services/live-score-overlay";
 import { FreeSportsSnapshotStore } from "@/src/services/free-sports-snapshot-store";
+import { sanitizeSportsSnapshot } from "@/src/services/sports-snapshot-sanitizer";
 import { rfefFallbackMatches } from "@/src/services/sports-catalog";
 
 declare global {
@@ -21,8 +22,9 @@ export function synchronizeFreeSports(options: {
     .sync(options)
     .then(async (snapshot) => {
       const overlaid = await applyLiveScoreOverlay(snapshot, { now: options.now });
-      await new FreeSportsSnapshotStore().write(overlaid);
-      return overlaid;
+      const sanitized = sanitizeSportsSnapshot(overlaid, { now: options.now });
+      await new FreeSportsSnapshotStore().write(sanitized);
+      return sanitized;
     })
     .finally(() => {
       globalThis.__matchDayFreeSportsSync = undefined;
