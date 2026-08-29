@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { TeamMark } from "@/src/components/team-mark";
+import {
+  applyLiveMatchesToStandings,
+  liveMatches,
+  liveScoreForTeam,
+} from "@/src/components/live-standings";
 import { StandingsForm } from "@/src/components/standings-form";
 import {
   sortStandings,
@@ -9,7 +13,8 @@ import {
   standingZoneLabel,
   StandingsZoneLegend,
 } from "@/src/components/standings-zones";
-import type { SportsCatalogSnapshot, SportsGroupSnapshot } from "@/src/domain/models";
+import { TeamMark } from "@/src/components/team-mark";
+import type { Match, SportsCatalogSnapshot, SportsGroupSnapshot } from "@/src/domain/models";
 
 type Snapshot = SportsCatalogSnapshot | SportsGroupSnapshot;
 
@@ -24,30 +29,57 @@ function formattedSync(value: string): string {
   }).format(new Date(value));
 }
 
+function liveScoreClass(teamId: string, match: Match): string {
+  if (!match.score) return "";
+  const isHome = match.homeTeam.id === teamId;
+  const goalsFor = isHome ? match.score.home : match.score.away;
+  const goalsAgainst = isHome ? match.score.away : match.score.home;
+  if (goalsFor > goalsAgainst) return "is-winning";
+  if (goalsFor < goalsAgainst) return "is-losing";
+  return "is-drawing";
+}
+
 function StandingTable({ snapshot }: { snapshot: Snapshot }) {
-  const isPreseason = snapshot.standingsStatus === "preseason";
-  const standings = sortStandings(snapshot.standings);
   const matches = "allMatches" in snapshot ? snapshot.allMatches : snapshot.matches;
+  const currentLiveMatches = liveMatches(matches);
+  const hasLive = currentLiveMatches.length > 0;
+  const isPreseason = snapshot.standingsStatus === "preseason" && !hasLive;
+  const standings = sortStandings(
+    applyLiveMatchesToStandings(snapshot.standings, matches),
+  );
+
   return (
     <section className="standings-tab-panel" role="tabpanel" aria-labelledby={`tab-${snapshot.competition.id.includes("group-1") ? "group-1" : "group-2"}`}>
       <div className="standings-group-heading">
         <h2>{snapshot.competition.name}</h2>
         <span>Última actualización: {formattedSync(snapshot.generatedAt)}</span>
       </div>
-      <aside className="standings-warning" role="status">
-        <strong>
-          {isPreseason
-            ? "La temporada todavía no ha comenzado"
-            : snapshot.standingsStatus === "complete"
-              ? "Clasificación calculada con todos los resultados"
-              : "Clasificación calculada y provisional"}
-        </strong>
-        <p>
-          {snapshot.standingsStatus === "complete"
-            ? "Tabla construida con resultados finales disponibles."
-            : `Clasificación pendiente de resultados completos. Faltan ${snapshot.missingGroupResults} resultados.`}
-        </p>
-      </aside>
+
+      {hasLive ? (
+        <aside className="standings-live-banner" role="status">
+          <span className="standings-live-dot" aria-hidden="true" />
+          <div>
+            <strong>En vivo</strong>
+            <p>Clasificación provisional incluyendo los marcadores actuales.</p>
+          </div>
+        </aside>
+      ) : (
+        <aside className="standings-warning" role="status">
+          <strong>
+            {isPreseason
+              ? "La temporada todavía no ha comenzado"
+              : snapshot.standingsStatus === "complete"
+                ? "Clasificación calculada con todos los resultados"
+                : "Clasificación calculada y provisional"}
+          </strong>
+          <p>
+            {snapshot.standingsStatus === "complete"
+              ? "Tabla construida con resultados finales disponibles."
+              : `Clasificación pendiente de resultados completos. Faltan ${snapshot.missingGroupResults} resultados.`}
+          </p>
+        </aside>
+      )}
+
       <StandingsZoneLegend />
       <div className="standings-table-wrap">
         <table className="standings-table">
@@ -62,10 +94,12 @@ function StandingTable({ snapshot }: { snapshot: Snapshot }) {
           <tbody>
             {standings.map((entry, index) => {
               const zone = standingZone(index, standings.length);
+              const currentScore = liveScoreForTeam(entry.team.id, matches);
               const classes = [
                 "standings-zone-row",
                 `standings-zone-row-${zone}`,
                 entry.team.id === "real-zaragoza" ? "standings-team-highlight" : "",
+                currentScore ? "standings-row-live" : "",
               ].filter(Boolean).join(" ");
               return (
                 <tr className={classes} key={entry.team.id}>
@@ -73,7 +107,15 @@ function StandingTable({ snapshot }: { snapshot: Snapshot }) {
                   <th scope="row">
                     <span className="standings-team-cell">
                       <TeamMark team={entry.team} size="tiny" />
-                      <span>{entry.team.name}</span>
+                      <span className="standings-team-name">{entry.team.name}</span>
+                      {currentScore ? (
+                        <span
+                          className={`standings-live-score ${liveScoreClass(entry.team.id, currentScore.match)}`}
+                          title={`${currentScore.match.homeTeam.shortName} ${currentScore.label} ${currentScore.match.awayTeam.shortName}`}
+                        >
+                          {currentScore.label}
+                        </span>
+                      ) : null}
                     </span>
                   </th>
                   <td>{entry.played}</td><td>{entry.won}</td><td>{entry.drawn}</td><td>{entry.lost}</td>
