@@ -11,6 +11,7 @@ import {
   parseRfefCalendarLinesForGroup,
   validateRfefCalendar,
 } from "../src/providers/rfef-pdf-calendar-provider";
+import { mergeRfefFacts } from "../src/services/free-sports-aggregator";
 import { isPathAllowedByRobots } from "../src/services/robots-policy";
 
 const fallbackMatches = fallback.matches as NormalizedGroupMatch[];
@@ -85,6 +86,32 @@ test("descarta 02:00 cuando toda la jornada usa el mismo placeholder", () => {
   );
   assert.ok(kickoffs.every((kickoff) => kickoff.value === undefined));
   assert.ok(kickoffs.every((kickoff) => kickoff.status === "provisional"));
+});
+
+test("aplica al Grupo II los horarios confirmados de la jornada", () => {
+  const merged = mergeRfefFacts(
+    fallbackMatches,
+    "2026-08-29T14:00:00.000Z",
+  );
+  const huesca = merged.find(
+    (match) =>
+      match.round === 1 &&
+      match.homeTeam.name === "SD Huesca" &&
+      match.awayTeam.name === "UE Sant Andreu",
+  );
+  const europa = merged.find(
+    (match) =>
+      match.round === 1 &&
+      match.homeTeam.name === "CE Europa" &&
+      match.awayTeam.name === "Real Jaén CF",
+  );
+
+  assert.ok(huesca);
+  assert.equal(huesca.kickoffStatus, "confirmed");
+  assert.equal(huesca.startsAt, "2026-08-29T19:15:00+02:00");
+  assert.ok(europa);
+  assert.equal(europa.kickoffStatus, "confirmed");
+  assert.equal(europa.startsAt, "2026-08-30T19:15:00+02:00");
 });
 
 test("extrae solo hechos mínimos de una tarjeta oficial sintética", () => {
