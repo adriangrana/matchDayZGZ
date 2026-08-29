@@ -26,6 +26,25 @@ export async function POST(request: Request) {
       : news.status === "fulfilled"
         ? news.value.syncedAt
         : new Date().toISOString();
+  const liveSources =
+    sports.status === "fulfilled"
+      ? sports.value.diagnostics
+          .filter((diagnostic) =>
+            [
+              "rfef-live-scoreboard",
+              "sofascore-live-fallback",
+              "sofascore-matchday-fallback",
+              "rfef-results-article",
+            ].includes(diagnostic.id),
+          )
+          .map((diagnostic) => ({
+            id: diagnostic.id,
+            status: diagnostic.policyStatus,
+            extracted: diagnostic.extracted.matches,
+            httpStatus: diagnostic.httpStatus,
+            error: diagnostic.error,
+          }))
+      : [];
 
   return Response.json(
     {
@@ -33,6 +52,7 @@ export async function POST(request: Request) {
       partial: errors.length === 1,
       syncedAt,
       errors,
+      liveSources,
     },
     {
       status: errors.length === 2 ? 502 : 200,
