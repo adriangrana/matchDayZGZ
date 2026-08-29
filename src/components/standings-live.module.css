@@ -1,0 +1,79 @@
+.liveBanner {
+  align-items: center;
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 24%, var(--line));
+  border-radius: 14px;
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 11px 14px;
+}
+
+.liveBanner strong {
+  color: var(--success);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.liveBanner p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 2px 0 0;
+}
+
+.liveDot {
+  animation: live-pulse 1.4s ease-in-out infinite;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 12%, transparent);
+  flex: 0 0 auto;
+  height: 8px;
+  width: 8px;
+}
+
+.liveRow {
+  background: color-mix(in srgb, var(--success) 3%, transparent);
+}
+
+.teamName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.liveScore {
+  border-radius: 4px;
+  color: #fff;
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  line-height: 1;
+  margin-left: 7px;
+  padding: 3px 5px;
+}
+
+.winning {
+  background: #22b85a;
+}
+
+.losing {
+  background: #e22f49;
+}
+
+.drawing {
+  background: #778494;
+}
+
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.18);
+  }
+}
