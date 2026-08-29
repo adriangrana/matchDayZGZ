@@ -1,5 +1,5 @@
 import { groupTwoTeams } from "@/src/data/primera-federacion-teams";
-import type { StandingEntry } from "@/src/domain/models";
+import type { StandingEntry, Team } from "@/src/domain/models";
 import type { NormalizedGroupMatch } from "@/src/providers/free-sports-types";
 
 interface MutableStanding extends StandingEntry {
@@ -10,9 +10,11 @@ interface MutableStanding extends StandingEntry {
 export class ComputedStandingsProvider {
   readonly id = "computed-standings";
 
+  constructor(private readonly teams: Team[] = groupTwoTeams) {}
+
   compute(matches: NormalizedGroupMatch[]): MutableStanding[] {
     const table = new Map<string, MutableStanding>(
-      groupTwoTeams.map((team) => [
+      this.teams.map((team) => [
         team.id,
         {
           position: 0,
@@ -67,7 +69,7 @@ export class ComputedStandingsProvider {
         goalDifference: entry.goalsFor - entry.goalsAgainst,
       }));
 
-    if (finishedMatches < 380) {
+    if (finishedMatches === 0) {
       return entries;
     }
 

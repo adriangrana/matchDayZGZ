@@ -78,3 +78,25 @@ test("normaliza y valida todos los campos comunes", () => {
   assert.equal(article.confirmation, "unknown");
   assert.equal(article.syncedAt, "2026-07-27T10:30:00.000Z");
 });
+
+test("acepta transformaciones editoriales que incluyen default en la URL", () => {
+  const article = normalizeNewsItem(
+    {
+      title: "El Real Zaragoza disputa su primer amistoso",
+      description: "Previa del encuentro de pretemporada.",
+      url: "https://example.com/amistoso",
+      publishedAt: "Tue, 28 Jul 2026 18:13:18 +0000",
+      imageUrl:
+        "https://cdn.example.com/clip/foto_16-9-aspect-ratio_default_0_x1000y351.jpg",
+      imageWidth: 880,
+      imageHeight: 495,
+    },
+    source,
+    "2026-07-28T18:30:00.000Z",
+  );
+
+  assert.equal(
+    article.imageUrl,
+    "https://cdn.example.com/clip/foto_16-9-aspect-ratio_default_0_x1000y351.jpg",
+  );
+});

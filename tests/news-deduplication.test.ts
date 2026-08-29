@@ -93,3 +93,41 @@ test("conserva acontecimientos distintos", () => {
 
   assert.equal(result.length, 2);
 });
+
+test("ordena primero las noticias con publicación más reciente", () => {
+  const groups = groupRelatedNews([
+    article("older-official", "El club publica un comunicado institucional", {
+      publishedAt: "2026-07-27T08:00:00.000Z",
+      confirmation: "official",
+      source: { ...source, isOfficial: true },
+      relatedEntityIds: ["club"],
+    }),
+    article("newer", "El equipo prepara el encuentro del fin de semana", {
+      publishedAt: "2026-07-27T11:30:00.000Z",
+      confirmation: "confirmed",
+      relatedEntityIds: ["partido-1"],
+    }),
+  ]);
+
+  assert.deepEqual(
+    groups.map((group) => group.primary.id),
+    ["newer", "older-official"],
+  );
+});
+
+test("una cobertura relacionada más reciente ocupa la tarjeta principal", () => {
+  const groups = groupRelatedNews([
+    article("older", "El Zaragoza completa una sesión de entrenamiento", {
+      publishedAt: "2026-07-27T08:00:00.000Z",
+      confirmation: "official",
+      source: { ...source, isOfficial: true },
+    }),
+    article("newer", "El Zaragoza completa una sesión de entrenamiento", {
+      publishedAt: "2026-07-27T10:00:00.000Z",
+      confirmation: "confirmed",
+    }),
+  ]);
+
+  assert.equal(groups[0]?.primary.id, "newer");
+  assert.equal(groups[0]?.related[0]?.id, "older");
+});

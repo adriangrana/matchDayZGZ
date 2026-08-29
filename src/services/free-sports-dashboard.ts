@@ -1,8 +1,8 @@
 import type { SportsDashboardSnapshot } from "@/src/domain/models";
 import {
-  getSportsCatalogSnapshot,
   rfefFallbackMatches,
 } from "@/src/services/sports-catalog";
+import { getPersistedSportsCatalogCollection } from "@/src/services/persisted-sports-catalog";
 
 function homeStandings(
   entries: SportsDashboardSnapshot["standings"],
@@ -17,10 +17,11 @@ function homeStandings(
   return entries.slice(start, start + 5);
 }
 
-export function getFreeSportsDashboardSnapshot(
+export async function getFreeSportsDashboardSnapshot(
   now = new Date(),
-): SportsDashboardSnapshot | undefined {
-  const catalog = getSportsCatalogSnapshot();
+): Promise<SportsDashboardSnapshot | undefined> {
+  const { groupTwo: catalog, groupOne } =
+    await getPersistedSportsCatalogCollection();
   const zaragozaMatches = catalog.matches;
   const nowTime = now.getTime();
   const recentMatches = zaragozaMatches
@@ -37,6 +38,25 @@ export function getFreeSportsDashboardSnapshot(
   const nextMatch = upcomingMatches[0];
   if (!nextMatch) return undefined;
 
+  const groupOneRecentMatches = groupOne.matches
+    .filter((match) => match.status === "finished")
+    .slice(-10)
+    .reverse();
+  const groupOneUpcomingMatches = groupOne.matches
+    .filter((match) => match.status === "scheduled")
+    .slice(0, 10);
+  const groupTwoOverviewMatches = catalog.allMatches ?? catalog.matches;
+  const groupTwoRecentMatches = groupTwoOverviewMatches
+    .filter((match) => match.status === "finished")
+    .sort(
+      (first, second) =>
+        new Date(second.startsAt).getTime() - new Date(first.startsAt).getTime(),
+    )
+    .slice(0, 10);
+  const groupTwoUpcomingMatches = groupTwoOverviewMatches
+    .filter((match) => match.status === "scheduled")
+    .slice(0, 10);
+
   const standings =
     catalog.standingsStatus === "complete"
       ? homeStandings(catalog.standings)
@@ -50,15 +70,13 @@ export function getFreeSportsDashboardSnapshot(
     standings,
     news: [],
     dailyBrief:
-      "Calendario oficial del Grupo II cargado desde la RFEF. Las fechas son la base de cada jornada; el horario y el estadio permanecen pendientes hasta una confirmación oficial.",
+      "Calendarios oficiales de los Grupos I y II cargados desde la RFEF. Las fechas son la base de cada jornada; los horarios se muestran solo cuando existe confirmación oficial.",
     generatedAt: syncedAt,
     freshness: "fresh",
     isDemo: false,
     mode: "real",
-    stale: false,
-    sourceErrors: [
-      "AS permanece desactivado porque sus condiciones accesibles reservan el uso mediante lectura mecánica",
-    ],
+    stale: catalog.stale,
+    sourceErrors: catalog.sourceErrors,
     requestUsage: {
       date,
       used: 0,
@@ -72,6 +90,17 @@ export function getFreeSportsDashboardSnapshot(
     },
     standingsStatus: catalog.standingsStatus,
     missingGroupResults: catalog.missingGroupResults,
+    groupOneUpcomingMatches,
+    groupOneRecentMatches,
+    groupOneStandings: groupOne.standings,
+    groupOneStandingsStatus: groupOne.standingsStatus,
+    groupOneMissingGroupResults: groupOne.missingGroupResults,
+    groupOneGeneratedAt: groupOne.generatedAt,
+    groupTwoUpcomingMatches,
+    groupTwoRecentMatches,
+    groupTwoFullStandings: catalog.standings,
+    groupTwoStandingsStatus: catalog.standingsStatus,
+    groupTwoMissingGroupResults: catalog.missingGroupResults,
   };
 }
 

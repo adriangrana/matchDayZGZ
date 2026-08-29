@@ -17,12 +17,20 @@ import { getFreeSportsDashboardSnapshot } from "../src/services/free-sports-dash
 import {
   isConfirmedKickoff,
   kickoffLabel,
+  madridDateKey,
   matchDateLabel,
   venueLabel,
 } from "../src/services/sports-presenter";
 import { isAllowedRemoteImageUrl } from "../src/services/image-validation";
 
 const normalized = fallback.matches as NormalizedGroupMatch[];
+
+test("normaliza la fecha de Madrid en formato ISO para resaltar el día actual", () => {
+  assert.equal(
+    madridDateKey("2026-08-29T00:30:00+02:00"),
+    "2026-08-29",
+  );
+});
 
 test("/partidos recibe los 38 partidos del Real Zaragoza", () => {
   const snapshot = getSportsCatalogSnapshot();
@@ -60,10 +68,10 @@ test("los filtros distinguen estado, localía y competición", () => {
   );
 });
 
-test("Inicio limita próximos y resultados a tres", () => {
-  const dashboard = getFreeSportsDashboardSnapshot(
+test("Inicio limita próximos y resultados a tres", async () => {
+  const dashboard = (await getFreeSportsDashboardSnapshot(
     new Date("2026-07-28T10:00:00Z"),
-  )!;
+  ))!;
 
   assert.ok(dashboard.upcomingMatches.length <= 3);
   assert.ok(dashboard.recentMatches.length <= 3);

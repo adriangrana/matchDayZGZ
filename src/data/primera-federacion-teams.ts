@@ -67,6 +67,41 @@ export const groupTwoTeams: Team[] = groupTwoTeamNames.map((name) => ({
   abbreviation: abbreviation(name),
 }));
 
+export const groupOneTeamNames = [
+  "Arenas Club",
+  "Racing Club Ferrol",
+  "Barakaldo CF",
+  "CyD Leonesa",
+  "CP Cacereño",
+  "CD Mirandés",
+  "AD Mérida",
+  "RC Deportivo Fabril",
+  "UD Ourense",
+  "SD Ponferradina",
+  "Real Avilés Industrial",
+  "Pontevedra CF",
+  "Real Unión Club",
+  "CD Coria",
+  "UD Logroñés",
+  "CD Extremadura",
+  "Unionistas de Salamanca CF",
+  "CD Lugo",
+  "Zamora CF",
+  'Athletic Club "B"',
+] as const;
+
+export const groupOneTeams: Team[] = groupOneTeamNames.map((name) => ({
+  id: slug(name),
+  name,
+  shortName: name
+    .replace("Racing Club Ferrol", "Racing Ferrol")
+    .replace("RC Deportivo Fabril", "Depor Fabril")
+    .replace("Real Avilés Industrial", "Real Avilés")
+    .replace("Unionistas de Salamanca CF", "Unionistas")
+    .replace('Athletic Club "B"', "Athletic B"),
+  abbreviation: abbreviation(name),
+}));
+
 function comparable(value: string): string {
   return value
     .normalize("NFD")
@@ -82,6 +117,40 @@ const aliases = new Map<string, Team>();
 for (const team of groupTwoTeams) {
   aliases.set(comparable(team.name), team);
   aliases.set(comparable(team.shortName), team);
+}
+
+const groupOneAliases = new Map<string, Team>();
+for (const team of groupOneTeams) {
+  groupOneAliases.set(comparable(team.name), team);
+  groupOneAliases.set(comparable(team.shortName), team);
+}
+
+export const groupOneTeamAliases: Record<string, string[]> = {
+  "barakaldo-cf": ["Barakaldo"],
+  "racing-club-ferrol": ["Racing Ferrol", "Racing Club de Ferrol"],
+  "cyd-leonesa": ["Cultural y Deportiva Leonesa", "Cultural Leonesa"],
+  "cp-cacereno": ["CP Cacereño", "Cacereño"],
+  "cd-mirandes": ["CD Mirandés", "Mirandés"],
+  "ad-merida": ["AD Mérida", "Mérida"],
+  "rc-deportivo-fabril": ["Deportivo Fabril", "RC Deportivo"],
+  "ud-ourense": ["Ourense CF", "Ourense"],
+  "sd-ponferradina": ["Ponferradina"],
+  "real-aviles-industrial": ["Real Avilés", "Real Avilés Industrial"],
+  "pontevedra-cf": ["Pontevedra"],
+  "real-union-club": ["Real Unión", "Real Union Club"],
+  "cd-coria": ["Coria CF", "Coria"],
+  "ud-logrones": ["Logroñés", "UD Logroñés"],
+  "cd-extremadura": ["Extremadura UD", "Extremadura"],
+  "unionistas-de-salamanca-cf": ["Unionistas", "Unionistas de Salamanca"],
+  "cd-lugo": ["Lugo"],
+  "zamora-cf": ["Zamora"],
+  "athletic-club-b": ["Athletic B", "Athletic Club B", "Bilbao Athletic", "Athletic Bilbao"],
+};
+
+for (const [teamId, teamAliases] of Object.entries(groupOneTeamAliases)) {
+  const team = groupOneTeams.find((candidate) => candidate.id === teamId);
+  if (!team) continue;
+  teamAliases.forEach((alias) => groupOneAliases.set(comparable(alias), team));
 }
 
 export const groupTwoTeamAliases: Record<string, string[]> = {
@@ -131,6 +200,16 @@ export function resolveGroupTwoTeam(value: string): Team | undefined {
 export function requireGroupTwoTeam(value: string): Team {
   const team = resolveGroupTwoTeam(value);
   if (!team) throw new Error(`Equipo del Grupo II no reconocido: ${value}`);
+  return team;
+}
+
+export function resolveGroupOneTeam(value: string): Team | undefined {
+  return groupOneAliases.get(comparable(value));
+}
+
+export function requireGroupOneTeam(value: string): Team {
+  const team = resolveGroupOneTeam(value);
+  if (!team) throw new Error(`Equipo del Grupo I no reconocido: ${value}`);
   return team;
 }
 

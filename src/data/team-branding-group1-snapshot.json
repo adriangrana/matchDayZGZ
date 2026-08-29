@@ -1,0 +1,293 @@
+{
+  "provider": "thesportsdb",
+  "syncedAt": "2026-08-29T13:21:33.637Z",
+  "refreshAfter": "2026-09-05T13:21:33.637Z",
+  "teamFingerprint": "ad-merida|arenas-club|athletic-club-b|barakaldo-cf|cd-coria|cd-extremadura|cd-lugo|cd-mirandes|cp-cacereno|cyd-leonesa|pontevedra-cf|racing-club-ferrol|rc-deportivo-fabril|real-aviles-industrial|real-union-club|sd-ponferradina|ud-logrones|ud-ourense|unionistas-de-salamanca-cf|zamora-cf",
+  "records": [
+    {
+      "canonicalTeamId": "arenas-club",
+      "canonicalName": "Arenas Club",
+      "aliases": [],
+      "provider": "thesportsdb",
+      "providerTeamId": "138250",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/1uvr7x1579897294.png",
+      "localAssetPath": "/team-badges/arenas-club.png",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Arenas%20Club",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "racing-club-ferrol",
+      "canonicalName": "Racing Club Ferrol",
+      "aliases": [
+        "Racing Ferrol",
+        "Racing Club de Ferrol"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "137827",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/m1sv6g1687262203.png",
+      "localAssetPath": "/team-badges/racing-club-ferrol.png",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Racing%20Club%20Ferrol",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "barakaldo-cf",
+      "canonicalName": "Barakaldo CF",
+      "aliases": [
+        "Barakaldo"
+      ],
+      "provider": "thesportsdb",
+      "providerTeamId": "137764",
+      "badgeUrl": "https://r2.thesportsdb.com/images/media/team/badge/v6ugnf1578747360.png",
+      "localAssetPath": "/team-badges/barakaldo-cf.png",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "validated",
+      "provenance": "https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Barakaldo%20CF",
+      "image": {
+        "mimeType": "image/png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "canonicalTeamId": "cyd-leonesa",
+      "canonicalName": "CyD Leonesa",
+      "aliases": [
+        "Cultural y Deportiva Leonesa",
+        "Cultural Leonesa"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "cp-cacereno",
+      "canonicalName": "CP Cacereño",
+      "aliases": [
+        "CP Cacereño",
+        "Cacereño"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "cd-mirandes",
+      "canonicalName": "CD Mirandés",
+      "aliases": [
+        "CD Mirandés",
+        "Mirandés"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "ad-merida",
+      "canonicalName": "AD Mérida",
+      "aliases": [
+        "AD Mérida",
+        "Mérida"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "rc-deportivo-fabril",
+      "canonicalName": "RC Deportivo Fabril",
+      "aliases": [
+        "Deportivo Fabril",
+        "RC Deportivo"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "ud-ourense",
+      "canonicalName": "UD Ourense",
+      "aliases": [
+        "Ourense CF",
+        "Ourense"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "sd-ponferradina",
+      "canonicalName": "SD Ponferradina",
+      "aliases": [
+        "Ponferradina"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "real-aviles-industrial",
+      "canonicalName": "Real Avilés Industrial",
+      "aliases": [
+        "Real Avilés",
+        "Real Avilés Industrial"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "pontevedra-cf",
+      "canonicalName": "Pontevedra CF",
+      "aliases": [
+        "Pontevedra"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "real-union-club",
+      "canonicalName": "Real Unión Club",
+      "aliases": [
+        "Real Unión",
+        "Real Union Club"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "cd-coria",
+      "canonicalName": "CD Coria",
+      "aliases": [
+        "Coria CF",
+        "Coria"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "ud-logrones",
+      "canonicalName": "UD Logroñés",
+      "aliases": [
+        "Logroñés",
+        "UD Logroñés"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "cd-extremadura",
+      "canonicalName": "CD Extremadura",
+      "aliases": [
+        "Extremadura UD",
+        "Extremadura"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "unionistas-de-salamanca-cf",
+      "canonicalName": "Unionistas de Salamanca CF",
+      "aliases": [
+        "Unionistas",
+        "Unionistas de Salamanca"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "cd-lugo",
+      "canonicalName": "CD Lugo",
+      "aliases": [
+        "Lugo"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "zamora-cf",
+      "canonicalName": "Zamora CF",
+      "aliases": [
+        "Zamora"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    },
+    {
+      "canonicalTeamId": "athletic-club-b",
+      "canonicalName": "Athletic Club \"B\"",
+      "aliases": [
+        "Athletic B",
+        "Athletic Club B",
+        "Bilbao Athletic",
+        "Athletic Bilbao"
+      ],
+      "provider": "thesportsdb",
+      "syncedAt": "2026-08-29T13:21:33.637Z",
+      "validation": "rejected",
+      "provenance": "https://www.thesportsdb.com/documentation",
+      "reason": "TheSportsDB respondió 429"
+    }
+  ],
+  "stats": {
+    "processed": 20,
+    "found": 3,
+    "validated": 3,
+    "rejected": 17,
+    "ambiguous": 0,
+    "missing": 0,
+    "requests": 24,
+    "fromCache": 0
+  }
+}

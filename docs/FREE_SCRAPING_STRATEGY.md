@@ -25,13 +25,14 @@ la interfaz de MatchDay ZGZ.
 Página utilizada:
 
 - `https://rfef.es/sites/default/files/2026-06/Primera_Federacion_Grupo_II.pdf`
+- `https://rfef.es/sites/default/files/2026-06/Primera_Federacion_Grupo_I.pdf`
 
 Campos:
 
 - temporada y grupo;
 - 38 jornadas y su fecha base;
 - equipo local y visitante;
-- los 380 partidos del Grupo II;
+- los 380 partidos de cada grupo;
 - los 38 partidos del Real Zaragoza.
 
 Robots y condiciones:
@@ -45,7 +46,7 @@ Robots y condiciones:
 
 Detección y selectores:
 
-- encabezado: `GRUPO 2`, `2026/2027` y `Calendario`;
+- encabezado: `GRUPO 1` o `GRUPO 2`, `2026/2027` y `Calendario`;
 - jornada: `Jornada <n> (dd/mm/aaaa)`;
 - partidos: diez líneas posteriores a cada jornada, divididas mediante el
   catálogo cerrado de 20 equipos y coincidencia de nombre más largo;
@@ -59,7 +60,8 @@ Frecuencia y cambios:
 - SHA-256 del PDF para detectar cambios aunque falten validadores;
 - un `304` o un hash idéntico conserva el snapshot sin reprocesarlo;
 - un hash nuevo se acepta solo si vuelve a superar todas las invariantes;
-- fallback normalizado local incluido en el repositorio.
+- fallback normalizado del Grupo II incluido en el repositorio; el Grupo I se
+  conserva en el último snapshot válido tras su primera sincronización.
 
 Riesgos:
 
@@ -159,8 +161,8 @@ Riesgos:
 
 ## Clasificación local
 
-`ComputedStandingsProvider` utiliza únicamente partidos terminados del Grupo II
-y calcula PJ, PG, PE, PP, GF, GC, diferencia y puntos. El orden inicial es:
+`ComputedStandingsProvider` utiliza únicamente partidos terminados del grupo
+correspondiente y calcula PJ, PG, PE, PP, GF, GC, diferencia y puntos. El orden inicial es:
 
 1. puntos;
 2. diferencia de goles;
@@ -192,4 +194,3 @@ snapshot `reviewRequired`.
 - cálculo de clasificación con victorias, empates y derrotas;
 - discrepancia entre tabla calculada y tabla publicada;
 - timeout, error HTTP, bloqueo y caché vigente sin nuevas solicitudes.
-

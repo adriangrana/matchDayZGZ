@@ -60,8 +60,11 @@ export interface FreeSportsInspection {
   requestCount: number;
   diagnostics: SourceDiagnostic[];
   matches: NormalizedGroupMatch[];
+  /** Calendario y resultados del Grupo I, paralelo al snapshot zaragocista. */
+  groupOneMatches?: NormalizedGroupMatch[];
   zaragozaMatches: NormalizedGroupMatch[];
   standings: StandingEntry[];
+  groupOneStandings?: StandingEntry[];
   publishedStandings?: StandingEntry[];
   differences: string[];
   reviewRequired: boolean;

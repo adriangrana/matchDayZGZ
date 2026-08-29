@@ -14,8 +14,16 @@ interface NewsCacheEntry {
   expiresAt: number;
 }
 
+export interface NewsImageValidationEntry {
+  imageUrl?: string;
+  expiresAt: number;
+}
+
 declare global {
   var __matchDayNewsCache: NewsCacheEntry | undefined;
+  var __matchDayNewsImageCache:
+    | Map<string, NewsImageValidationEntry>
+    | undefined;
 }
 
 function cacheMinutes(): number {
@@ -36,26 +44,61 @@ function demoNewsSnapshot(): NewsFeedSnapshot {
   };
 }
 
-async function validatePrimaryImages(
+export async function validatePrimaryImages(
   groups: NewsGroup[],
+  options: {
+    now?: Date;
+    limit?: number;
+    cache?: Map<string, NewsImageValidationEntry>;
+    validate?: typeof validateRemoteImage;
+  } = {},
 ): Promise<NewsGroup[]> {
-  const limit = Math.max(
-    0,
-    Number(process.env.NEWS_IMAGE_VALIDATION_LIMIT ?? 18),
-  );
+  const now = options.now ?? new Date();
+  const limit =
+    options.limit ??
+    Math.max(
+      0,
+      Number(process.env.NEWS_IMAGE_VALIDATION_LIMIT ?? 18),
+    );
+  const cache =
+    options.cache ??
+    (globalThis.__matchDayNewsImageCache ??= new Map());
+  const validate = options.validate ?? validateRemoteImage;
   let checked = 0;
 
   return Promise.all(
     groups.map(async (group) => {
       const article = group.primary;
-      if (!article.imageUrl || checked >= limit) {
+      if (!article.imageUrl) {
         return {
           ...group,
           primary: { ...article, imageUrl: undefined },
         };
       }
+
+      const cached = cache.get(article.imageUrl);
+      if (cached && cached.expiresAt > now.getTime()) {
+        return {
+          ...group,
+          primary: { ...article, imageUrl: cached.imageUrl },
+        };
+      }
+
+      if (checked >= limit) {
+        // El RSS ya publicó una URL HTTPS normalizada. Se conserva para que el
+        // navegador pueda cargarla de forma diferida y aplicar su fallback si
+        // el medio deja de servirla.
+        return group;
+      }
+
       checked += 1;
-      const imageUrl = await validateRemoteImage(article.imageUrl);
+      const imageUrl = await validate(article.imageUrl);
+      cache.set(article.imageUrl, {
+        imageUrl,
+        expiresAt:
+          now.getTime() +
+          (imageUrl ? 24 * 60 * 60_000 : 60 * 60_000),
+      });
       return {
         ...group,
         primary: { ...article, imageUrl },
@@ -97,7 +140,9 @@ async function synchronizeRealNews(now = new Date()): Promise<NewsFeedSnapshot> 
     );
   }
 
-  const groups = await validatePrimaryImages(groupRelatedNews(articles, now));
+  const groups = await validatePrimaryImages(groupRelatedNews(articles, now), {
+    now,
+  });
   const snapshot: NewsFeedSnapshot = {
     groups,
     syncedAt: now.toISOString(),

@@ -1,9 +1,12 @@
 import fallback from "@/src/data/rfef-group-2-2026-27.json";
 import { officialSportsFacts } from "@/src/data/official-sports-facts";
+import { groupOneTeams } from "@/src/data/primera-federacion-teams";
 import type {
   Match,
   SportsCatalogSnapshot,
+  StandingEntry,
   StandingsStatus,
+  SportsGroupSnapshot,
 } from "@/src/domain/models";
 import { ComputedStandingsProvider } from "@/src/providers/computed-standings-provider";
 import type { NormalizedGroupMatch } from "@/src/providers/free-sports-types";
@@ -25,14 +28,23 @@ const fallbackMatches = (fallback.matches as NormalizedGroupMatch[]).map(
     };
   },
 );
-const competition = {
+export const groupTwoCompetition = {
   id: "primera-federacion-group-2-2026-27",
   name: "Primera Federación · Grupo II",
   shortName: "Primera Federación",
   season: "2026/27",
 };
+export const groupOneCompetition = {
+  id: "primera-federacion-group-1-2026-27",
+  name: "Primera Federación · Grupo I",
+  shortName: "Primera Federación",
+  season: "2026/27",
+} as const;
 
-export function toCatalogMatch(match: NormalizedGroupMatch): Match {
+export function toCatalogMatch(
+  match: NormalizedGroupMatch,
+  competition = groupTwoCompetition,
+): Match {
   return {
     id: match.id,
     competition,
@@ -77,15 +89,22 @@ export function standingsState(
 export function createSportsCatalogSnapshot(
   normalizedMatches: NormalizedGroupMatch[] = fallbackMatches,
   generatedAt = fallback.generatedAt,
+  standings?: StandingEntry[],
 ): SportsCatalogSnapshot {
   const tableState = standingsState(normalizedMatches);
+  const allMatches = normalizedMatches
+    .map((match) => toCatalogMatch(match))
+    .sort(
+      (first, second) =>
+        new Date(first.startsAt).getTime() - new Date(second.startsAt).getTime(),
+    );
   const matches = normalizedMatches
     .filter(
       (match) =>
         match.homeTeam.id === "real-zaragoza" ||
         match.awayTeam.id === "real-zaragoza",
     )
-    .map(toCatalogMatch)
+    .map((match) => toCatalogMatch(match))
     .sort(
       (first, second) =>
         new Date(first.startsAt).getTime() -
@@ -93,9 +112,13 @@ export function createSportsCatalogSnapshot(
     );
 
   return {
-    season: competition.season,
+    competition: groupTwoCompetition,
+    season: groupTwoCompetition.season,
     matches,
-    standings: new ComputedStandingsProvider().compute(normalizedMatches),
+    allMatches,
+    standings:
+      standings ??
+      new ComputedStandingsProvider().compute(normalizedMatches),
     standingsStatus: tableState.status,
     missingGroupResults: tableState.missing,
     generatedAt,
@@ -106,8 +129,40 @@ export function createSportsCatalogSnapshot(
   };
 }
 
+export function createSportsGroupSnapshot(
+  normalizedMatches: NormalizedGroupMatch[],
+  group: "group-1" | "group-2",
+  generatedAt: string,
+  standings?: StandingEntry[],
+  options: { stale?: boolean; sourceErrors?: string[] } = {},
+): SportsGroupSnapshot {
+  const competition = group === "group-1" ? groupOneCompetition : groupTwoCompetition;
+  const tableState = standingsState(normalizedMatches);
+  return {
+    group,
+    competition,
+    matches: normalizedMatches
+      .map((match) => toCatalogMatch(match, competition))
+      .sort(
+        (first, second) =>
+          new Date(first.startsAt).getTime() - new Date(second.startsAt).getTime(),
+      ),
+    standings:
+      standings ??
+      new ComputedStandingsProvider(group === "group-1" ? groupOneTeams : undefined).compute(
+        normalizedMatches,
+      ),
+    standingsStatus: tableState.status,
+    missingGroupResults: tableState.missing,
+    generatedAt,
+    stale: options.stale ?? false,
+    sourceErrors: options.sourceErrors ?? [],
+  };
+}
+
 export function getSportsCatalogSnapshot(): SportsCatalogSnapshot {
   return createSportsCatalogSnapshot();
 }
 
 export const rfefFallbackMatches = fallbackMatches;
+export const rfefFallbackGeneratedAt = fallback.generatedAt;

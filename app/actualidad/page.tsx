@@ -75,7 +75,10 @@ export default async function NewsPage({
       <main className="news-page page-container">
         <div className="news-page-header">
           <p className="eyebrow">Actualidad zaragocista</p>
-          <h1>Todo lo que está pasando.</h1>
+          <h1 className="page-title page-title-editorial">
+            <span>Todo lo que está</span>
+            <strong>pasando</strong>
+          </h1>
           <p>
             Información de fuentes locales y deportivas, agrupada y enlazada
             siempre a la publicación original.

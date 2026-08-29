@@ -25,12 +25,6 @@ export const metadata: Metadata = {
   description:
     "Partidos, clasificación y actualidad del Real Zaragoza en una experiencia deportiva rápida y clara.",
   applicationName: "MatchDay ZGZ",
-  manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [{ url: "/brand/zg-mark-dark.png", type: "image/png" }],
-    shortcut: "/brand/zg-mark-dark.png",
-    apple: "/brand/zg-mark-light.png",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -79,6 +73,23 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <link href="/favicon.ico" rel="shortcut icon" />
+        <link
+          href="/brand/zg-mark-light.png"
+          media="(prefers-color-scheme: light)"
+          rel="icon"
+          sizes="256x256"
+          type="image/png"
+        />
+        <link
+          href="/brand/zg-mark-dark.png"
+          media="(prefers-color-scheme: dark)"
+          rel="icon"
+          sizes="256x256"
+          type="image/png"
+        />
+        <link href="/brand/zg-mark-light.png" rel="apple-touch-icon" />
+        <link href="/manifest.json" rel="manifest" />
         <script
           dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
           id="matchday-theme-init"

@@ -1,4 +1,5 @@
 import { BrandLockup } from "@/src/components/brand-lockup";
+import { SyncButton } from "@/src/components/sync-button";
 import { ThemeSelector } from "@/src/components/theme-selector";
 
 const links = [
@@ -30,6 +31,7 @@ export function Header({ active = "home" }: { active?: HeaderSection }) {
         </nav>
 
         <div className="header-actions">
+          <SyncButton />
           <ThemeSelector />
         </div>
       </div>

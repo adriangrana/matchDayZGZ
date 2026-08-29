@@ -117,6 +117,17 @@ async function demoSportsSnapshot(
       ? "partial"
       : "preseason",
     missingGroupResults: 380,
+    groupOneUpcomingMatches: [],
+    groupOneRecentMatches: [],
+    groupOneStandings: [],
+    groupOneStandingsStatus: "preseason",
+    groupOneMissingGroupResults: 380,
+    groupOneGeneratedAt: snapshot.generatedAt,
+    groupTwoUpcomingMatches: snapshot.upcomingMatches,
+    groupTwoRecentMatches: snapshot.recentMatches,
+    groupTwoFullStandings: snapshot.standings,
+    groupTwoStandingsStatus: "preseason",
+    groupTwoMissingGroupResults: 380,
   };
 }
 
@@ -172,6 +183,27 @@ function realDashboardSnapshot(
           (match) => match.status === "finished" && match.score,
         ).length,
     ),
+    groupOneUpcomingMatches: [],
+    groupOneRecentMatches: [],
+    groupOneStandings: [],
+    groupOneStandingsStatus: "unavailable",
+    groupOneMissingGroupResults: 380,
+    groupOneGeneratedAt: dataSyncedAt ?? now.toISOString(),
+    groupTwoUpcomingMatches: upcomingMatches,
+    groupTwoRecentMatches: recentMatches,
+    groupTwoFullStandings: state.standings,
+    groupTwoStandingsStatus: state.matches.some(
+      (match) => match.status === "finished" && match.score,
+    )
+      ? "partial"
+      : "preseason",
+    groupTwoMissingGroupResults: Math.max(
+      0,
+      380 -
+        state.matches.filter(
+          (match) => match.status === "finished" && match.score,
+        ).length,
+    ),
   };
 }
 
@@ -182,7 +214,7 @@ async function synchronizeSports(
   const store = new SportsStateStore();
   const selectedProvider = process.env.SPORTS_PROVIDER?.trim() || "free-web";
   if (selectedProvider === "free-web") {
-    const snapshot = getFreeSportsDashboardSnapshot(now);
+    const snapshot = await getFreeSportsDashboardSnapshot(now);
     return (
       snapshot ??
       (await demoSportsSnapshot(store, [

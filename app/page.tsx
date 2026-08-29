@@ -1,6 +1,7 @@
 import { Countdown } from "@/src/components/countdown";
 import { DemoBadge } from "@/src/components/demo-badge";
 import { Header } from "@/src/components/header";
+import { HomeGroupTabs } from "@/src/components/home-group-tabs";
 import { NewsCard } from "@/src/components/news-card";
 import { SiteFooter } from "@/src/components/site-footer";
 import { TeamMark } from "@/src/components/team-mark";
@@ -10,10 +11,13 @@ import { getSportsSnapshot } from "@/src/services/sports-service";
 import {
   isConfirmedKickoff,
   kickoffLabel,
+  madridDateKey,
   matchDateLabel,
   scheduleLabel,
   venueLabel,
 } from "@/src/services/sports-presenter";
+
+export const dynamic = "force-dynamic";
 
 function formatUpdatedAt(value: string) {
   return new Intl.DateTimeFormat("es-ES", {
@@ -60,6 +64,30 @@ function MatchRow({
   );
 }
 
+function GroupMatchRow({ match }: { match: Match }) {
+  const finished = match.status === "finished";
+  return (
+    <article className="match-row group-match-row">
+      <div className="match-date">
+        <span>{matchDateLabel(match, true)}</span>
+        <small>{match.round}</small>
+      </div>
+      <div className="group-match-teams">
+        <strong>{match.homeTeam.shortName}</strong>
+        <span>{finished ? "" : "vs"}</span>
+        <strong>{match.awayTeam.shortName}</strong>
+      </div>
+      {finished ? (
+        <strong className="match-score">
+          {match.score?.home ?? "–"} <span>:</span> {match.score?.away ?? "–"}
+        </strong>
+      ) : (
+        <span className="match-time">{kickoffLabel(match)}</span>
+      )}
+    </article>
+  );
+}
+
 export default async function Home() {
   const [snapshot, newsSnapshot] = await Promise.all([
     getSportsSnapshot(),
@@ -69,6 +97,7 @@ export default async function Home() {
   const zaragozaIsHome = nextMatch.homeTeam.id === "real-zaragoza";
   const now = new Date();
   const renderedAt = now.toISOString();
+  const todayDate = madridDateKey(now);
 
   return (
     <div className="site-shell">
@@ -208,7 +237,23 @@ export default async function Home() {
             </a>
           </div>
 
-          <div className="dashboard-grid">
+          <HomeGroupTabs
+            groupTwoMatches={[
+              ...snapshot.groupTwoRecentMatches,
+              ...snapshot.groupTwoUpcomingMatches,
+            ]}
+            groupTwoStandings={snapshot.groupTwoFullStandings}
+            groupTwoGeneratedAt={snapshot.generatedAt}
+            groupOneMatches={[
+              ...snapshot.groupOneRecentMatches,
+              ...snapshot.groupOneUpcomingMatches,
+            ]}
+            groupOneStandings={snapshot.groupOneStandings}
+            groupOneGeneratedAt={snapshot.groupOneGeneratedAt}
+            todayDate={todayDate}
+          />
+
+          <div className="dashboard-grid legacy-zaragoza-grid" aria-hidden="true">
             <a
               className={
                 snapshot.recentMatches.length > 0
@@ -309,6 +354,57 @@ export default async function Home() {
                 Ver clasificación completa <span aria-hidden="true">→</span>
               </span>
             </a>
+
+            <section className="panel group-one-panel" aria-labelledby="group-one-title">
+              <div className="panel-heading">
+                <h3 id="group-one-title">Primera Federación · Grupo I</h3>
+                <span>Calendario y tabla</span>
+              </div>
+              <div className="group-one-columns">
+                <div>
+                  <p className="panel-kicker">Próximos encuentros</p>
+                  {snapshot.groupOneUpcomingMatches.length > 0 ? (
+                    <div className="match-list">
+                      {snapshot.groupOneUpcomingMatches.map((match) => (
+                        <GroupMatchRow key={match.id} match={match} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="group-one-empty">Calendario pendiente de sincronización.</p>
+                  )}
+                  <p className="panel-kicker">Últimos resultados</p>
+                  {snapshot.groupOneRecentMatches.length > 0 ? (
+                    <div className="match-list group-one-results-list">
+                      {snapshot.groupOneRecentMatches.map((match) => (
+                        <GroupMatchRow key={match.id} match={match} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="group-one-empty">Aún no hay resultados oficiales.</p>
+                  )}
+                </div>
+                <div>
+                  <p className="panel-kicker">Clasificación</p>
+                  {snapshot.groupOneStandings.length > 0 ? (
+                    <div className="group-one-standings">
+                      {snapshot.groupOneStandings.slice(0, 5).map((entry) => (
+                        <div className="standing-row" key={entry.team.id}>
+                          <span>{entry.position || "—"}</span>
+                          <span className="standing-team"><TeamMark team={entry.team} size="tiny" />{entry.team.shortName}</span>
+                          <strong>{entry.points}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="group-one-empty">Clasificación pendiente de resultados.</p>
+                  )}
+                </div>
+              </div>
+              <div className="group-one-footer">
+                <span>Actualizado {formatUpdatedAt(snapshot.groupOneGeneratedAt)}</span>
+                <a href="/clasificacion" className="panel-full-link">Ver Grupo I completo <span aria-hidden="true">→</span></a>
+              </div>
+            </section>
           </div>
         </section>
 

@@ -2,6 +2,23 @@ import type { Match } from "@/src/domain/models";
 
 const placeholderHours = new Set(["00:00", "02:00", "12:00"]);
 
+export function madridDateKey(value: string | Date): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const values = Object.fromEntries(
+    new Intl.DateTimeFormat("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "Europe/Madrid",
+    })
+      .formatToParts(date)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function dateFromBase(match: Match): Date {
   const base = match.dateBase ?? match.startsAt.slice(0, 10);
   return new Date(`${base}T12:00:00Z`);

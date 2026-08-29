@@ -15,6 +15,7 @@ $PreviousDirectory = [System.IO.Path]::GetFullPath(
 )
 $StandaloneDirectory = Join-Path $RepositoryRoot "dist\standalone"
 $ProcessName = "matchday-zgz"
+$SyncProcessName = "matchday-zgz-sync"
 $ApplicationUrl = "http://127.0.0.1:3100/"
 $RunaraWorkingDirectory = "C:\www"
 
@@ -91,6 +92,19 @@ function Start-RunaraDashboard {
   }
 }
 
+function Test-RunaraProcess {
+  param(
+    [Parameter(Mandatory)]
+    [string] $Name
+  )
+
+  $information = (& runara info $Name 2>&1 | Out-String)
+  return (
+    $information -notmatch "\[ERR\]" -and
+    $information -match "(?m)^Name:\s+$([Regex]::Escape($Name))\s*$"
+  )
+}
+
 Assert-SafeDeploymentPath -Path $DeployDirectory
 Assert-SafeDeploymentPath -Path $StagingDirectory
 Assert-SafeDeploymentPath -Path $PreviousDirectory
@@ -118,6 +132,34 @@ New-Item -ItemType Directory -Path $StagingDirectory | Out-Null
 Get-ChildItem -LiteralPath $StandaloneDirectory -Force |
   Copy-Item -Destination $StagingDirectory -Recurse -Force
 
+$canvasPackageRoot = Join-Path $StagingDirectory "node_modules\@napi-rs"
+New-Item -ItemType Directory -Path $canvasPackageRoot -Force | Out-Null
+foreach ($canvasPackage in @("canvas", "canvas-win32-x64-msvc")) {
+  $sourcePackage = Join-Path `
+    $RepositoryRoot `
+    "node_modules\@napi-rs\$canvasPackage"
+  if (-not (Test-Path -LiteralPath $sourcePackage)) {
+    throw "Falta la dependencia de runtime @napi-rs/$canvasPackage."
+  }
+  Copy-Item -LiteralPath $sourcePackage `
+    -Destination (Join-Path $canvasPackageRoot $canvasPackage) `
+    -Recurse `
+    -Force
+}
+
+$pdfWorkerSource = Join-Path `
+  $RepositoryRoot `
+  "node_modules\pdfjs-dist\legacy\build\pdf.worker.mjs"
+$pdfWorkerDestination = Join-Path `
+  $StagingDirectory `
+  "dist\server\assets\pdf.worker.mjs"
+if (-not (Test-Path -LiteralPath $pdfWorkerSource)) {
+  throw "Falta el worker de extracción de texto de PDF."
+}
+Copy-Item -LiteralPath $pdfWorkerSource `
+  -Destination $pdfWorkerDestination `
+  -Force
+
 $sourceCache = Join-Path $RepositoryRoot ".cache"
 $deployedCache = Join-Path $DeployDirectory ".cache"
 if (Test-Path -LiteralPath $sourceCache) {
@@ -140,20 +182,127 @@ if (Test-Path -LiteralPath $localEnvironment) {
     -Force
 }
 
+$deployedSyncSecret = Join-Path $DeployDirectory ".sync-secret"
+$stagedSyncSecret = Join-Path $StagingDirectory ".sync-secret"
+if (Test-Path -LiteralPath $deployedSyncSecret) {
+  Copy-Item -LiteralPath $deployedSyncSecret `
+    -Destination $stagedSyncSecret `
+    -Force
+}
+else {
+  $secretBytes = New-Object byte[] 32
+  $random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try {
+    $random.GetBytes($secretBytes)
+  }
+  finally {
+    $random.Dispose()
+  }
+  [System.IO.File]::WriteAllText(
+    $stagedSyncSecret,
+    [Convert]::ToBase64String($secretBytes)
+  )
+}
+
 @"
 @echo off
 set "PORT=3100"
 set "HOST=127.0.0.1"
+set /p "MATCHDAY_SYNC_SECRET="<".sync-secret"
 node --env-file-if-exists=.env.local server.js
 "@ | Set-Content `
   -LiteralPath (Join-Path $StagingDirectory "run.cmd") `
   -Encoding ascii
 
-& runara info $ProcessName *> $null
-$processExists = $LASTEXITCODE -eq 0
+@'
+const baseUrl = process.env.MATCHDAY_SYNC_BASE_URL || "http://127.0.0.1:3100";
+const secret = process.env.MATCHDAY_SYNC_SECRET;
+const newsMinutes = Math.max(5, Number(process.env.NEWS_CACHE_MINUTES || 30));
+const sportsHours = Math.max(
+  1,
+  Number(process.env.SPORTS_SYNC_INTERVAL_HOURS || 6),
+);
+
+if (!secret) {
+  throw new Error("El secreto interno de sincronización no está disponible");
+}
+
+const tasks = [
+  {
+    name: "news",
+    path: "/api/internal/news/sync",
+    intervalMs: newsMinutes * 60_000,
+  },
+  {
+    name: "sports",
+    path: "/api/internal/sports/sync",
+    intervalMs: sportsHours * 3_600_000,
+  },
+];
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function synchronize(task) {
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(`${baseUrl}${task.path}`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${secret}` },
+      signal: AbortSignal.timeout(60_000),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.ok !== true) {
+      throw new Error(
+        typeof payload.error === "string"
+          ? payload.error
+          : `Respuesta HTTP ${response.status}`,
+      );
+    }
+    console.log(
+      `[sync-runner] ${task.name} actualizado en ${Date.now() - startedAt} ms · ${payload.syncedAt}`,
+    );
+  } catch (error) {
+    console.error(
+      `[sync-runner] ${task.name}: ${error instanceof Error ? error.message : "error desconocido"}`,
+    );
+  }
+}
+
+async function runTask(task) {
+  await synchronize(task);
+  while (true) {
+    await wait(task.intervalMs);
+    await synchronize(task);
+  }
+}
+
+await Promise.all(tasks.map(runTask));
+'@ | Set-Content `
+  -LiteralPath (Join-Path $StagingDirectory "sync-runner.mjs") `
+  -Encoding utf8
+
+@"
+@echo off
+set /p "MATCHDAY_SYNC_SECRET="<"C:\www\matchday-zgz\.sync-secret"
+node --env-file-if-exists=C:\www\matchday-zgz\.env.local C:\www\matchday-zgz\sync-runner.mjs
+"@ | Set-Content `
+  -LiteralPath (Join-Path $StagingDirectory "sync.cmd") `
+  -Encoding ascii
+
+$processExists = Test-RunaraProcess -Name $ProcessName
+$syncProcessExists = Test-RunaraProcess -Name $SyncProcessName
 $dashboardStatus = (& runara dashboard status 2>&1 | Out-String)
 $dashboardWasRunning = $dashboardStatus -match "Dashboard server running"
 
+$syncWasRunning = $false
+if ($syncProcessExists) {
+  $syncInfo = (& runara info $SyncProcessName 2>&1 | Out-String)
+  $syncWasRunning = $syncInfo -match "Desired: started"
+  Invoke-CheckedCommand runara stop $SyncProcessName
+  Start-Sleep -Milliseconds 500
+}
 if ($processExists) {
   Invoke-CheckedCommand runara stop $ProcessName
   Start-Sleep -Milliseconds 750
@@ -164,6 +313,7 @@ if ($dashboardWasRunning) {
 }
 
 $deploymentSwapped = $false
+$syncStarted = $false
 try {
   if (Test-Path -LiteralPath $DeployDirectory) {
     Move-DeploymentDirectory `
@@ -217,6 +367,26 @@ try {
     throw "La aplicación no respondió correctamente en $ApplicationUrl"
   }
 
+  if ($syncProcessExists) {
+    Invoke-CheckedCommand runara set $SyncProcessName `
+      --command "C:\www\matchday-zgz\sync.cmd" `
+      --cwd $RunaraWorkingDirectory `
+      --autorestart `
+      --autostart
+    Invoke-CheckedCommand runara start $SyncProcessName
+    $syncStarted = $true
+  }
+  else {
+    Invoke-CheckedCommand runara run "C:\www\matchday-zgz\sync.cmd" `
+      --name $SyncProcessName `
+      --cwd $RunaraWorkingDirectory `
+      --max-restarts 10 `
+      --restart-delay 5000 `
+      --min-uptime 3000 `
+      --autostart
+    $syncStarted = $true
+  }
+
   if (Test-Path -LiteralPath $PreviousDirectory) {
     Assert-SafeDeploymentPath -Path $PreviousDirectory
     Remove-Item -LiteralPath $PreviousDirectory -Recurse -Force
@@ -230,9 +400,16 @@ try {
   Write-Host "Despliegue local completado."
   Write-Host "Carpeta: $DeployDirectory"
   Write-Host "Proceso: $ProcessName"
+  Write-Host "Sincronizador: $SyncProcessName"
   Write-Host "URL: $ApplicationUrl"
 }
 catch {
+  if ($syncProcessExists -or $syncStarted) {
+    & runara stop $SyncProcessName *> $null
+  }
+  if (-not $syncProcessExists -and $syncStarted) {
+    & runara remove $SyncProcessName *> $null
+  }
   if ($processExists) {
     & runara stop $ProcessName *> $null
   }
@@ -253,6 +430,14 @@ catch {
         --autorestart `
         --autostart *> $null
       & runara start $ProcessName *> $null
+    }
+    if ($syncProcessExists -and $syncWasRunning) {
+      & runara set $SyncProcessName `
+        --command "C:\www\matchday-zgz\sync.cmd" `
+        --cwd $RunaraWorkingDirectory `
+        --autorestart `
+        --autostart *> $null
+      & runara start $SyncProcessName *> $null
     }
   }
 

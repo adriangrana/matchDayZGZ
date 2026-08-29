@@ -1,8 +1,6 @@
-import { FreeSportsAggregator } from "../src/services/free-sports-aggregator";
-import { rfefFallbackMatches } from "../src/services/free-sports-dashboard";
+import { synchronizeFreeSports } from "../src/services/free-sports-sync";
 
-const aggregator = new FreeSportsAggregator(rfefFallbackMatches);
-const snapshot = await aggregator.sync();
+const snapshot = await synchronizeFreeSports();
 const nextMatch = snapshot.zaragozaMatches.find(
   (match) =>
     match.status === "scheduled" &&
@@ -26,6 +24,7 @@ console.log(
       calendar: {
         groupMatches: snapshot.matches.length,
         zaragozaMatches: snapshot.zaragozaMatches.length,
+        groupOneMatches: snapshot.groupOneMatches?.length ?? 0,
       },
       nextMatch: nextMatch
         ? {
@@ -37,10 +36,10 @@ console.log(
           }
         : null,
       standings: snapshot.standings.length,
+      groupOneStandings: snapshot.groupOneStandings?.length ?? 0,
       reviewRequired: snapshot.reviewRequired,
     },
     null,
     2,
   ),
 );
-

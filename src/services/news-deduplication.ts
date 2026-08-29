@@ -77,6 +77,8 @@ export function groupRelatedNews(
     .map((group) => {
       const sorted = [...group].sort(
         (first, second) =>
+          new Date(second.publishedAt).getTime() -
+            new Date(first.publishedAt).getTime() ||
           articleScore(second, now) - articleScore(first, now),
       );
       const primary = sorted[0]!;
@@ -90,9 +92,9 @@ export function groupRelatedNews(
     })
     .sort(
       (first, second) =>
-        second.relevanceScore - first.relevanceScore ||
         new Date(second.primary.publishedAt).getTime() -
-          new Date(first.primary.publishedAt).getTime(),
+          new Date(first.primary.publishedAt).getTime() ||
+        second.relevanceScore - first.relevanceScore,
     );
 }
 
@@ -102,4 +104,3 @@ export function deduplicateNews(
 ): NewsArticle[] {
   return groupRelatedNews(articles, now).map((group) => group.primary);
 }
-

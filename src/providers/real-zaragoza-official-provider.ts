@@ -61,12 +61,46 @@ function numericTextsFromClass(fragment: string, className: string): number[] {
   )].map((match) => Number(match[1]));
 }
 
+interface EmbeddedMatchKickoff {
+  homeTeamName: string;
+  awayTeamName: string;
+  startsAt: string;
+}
+
+function comparableTeamName(value: string): string {
+  return decodeEntities(value)
+    .toLocaleLowerCase("es-ES")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\b(?:sad|cf)\b/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function embeddedMatchKickoffs(html: string): EmbeddedMatchKickoff[] {
+  const records: EmbeddedMatchKickoff[] = [];
+  const pattern =
+    /"homeTeam":\{[\s\S]*?"shortName":"([^"]+)"[\s\S]*?"awayTeam":\{[\s\S]*?"shortName":"([^"]+)"[\s\S]*?"date":"([^"]+)"[\s\S]*?"time":"([^"]+)"/gi;
+
+  for (const match of html.matchAll(pattern)) {
+    const startsAt = match[4]!;
+    if (Number.isNaN(new Date(startsAt).getTime())) continue;
+    records.push({
+      homeTeamName: decodeEntities(match[1]!),
+      awayTeamName: decodeEntities(match[2]!),
+      startsAt,
+    });
+  }
+  return records;
+}
+
 export function parseOfficialMatchesHtml(
   html: string,
   url: string,
   fetchedAt = new Date().toISOString(),
 ): OfficialMatchPatch[] {
   const labels = [...html.matchAll(/aria-label="([^"]+?)\s+vs\s+([^"]+?)"/gi)];
+  const embeddedKickoffs = embeddedMatchKickoffs(html);
   const patches: OfficialMatchPatch[] = [];
 
   labels.forEach((label, index) => {
@@ -97,9 +131,21 @@ export function parseOfficialMatchesHtml(
     );
     const round = Number(roundText?.match(/\d+/)?.[0]);
     const venue = textFromClass(fragment, "MkFootballMatchCard__venue");
-    const dateTime = fragment.match(
-      /<time[^>]+dateTime="([^"]+)"/i,
-    )?.[1];
+    const embeddedKickoff = embeddedKickoffs.find(
+      (record) =>
+        comparableTeamName(record.homeTeamName) ===
+          comparableTeamName(homeTeamName) &&
+        comparableTeamName(record.awayTeamName) ===
+          comparableTeamName(awayTeamName),
+    );
+    const dateTime =
+      fragment.match(/<time[^>]+dateTime="([^"]+)"/i)?.[1] ??
+      fragment.match(/"time"\s*:\s*"([^"]+)"/i)?.[1] ??
+      embeddedKickoff?.startsAt;
+    const hasConfirmedKickoff = Boolean(
+      dateTime &&
+        !/T00:00:00(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/i.test(dateTime),
+    );
     const statusClass = fragment.match(
       /MkFootballMatchCard--status-([a-z-]+)/i,
     )?.[1];
@@ -121,10 +167,10 @@ export function parseOfficialMatchesHtml(
       homeTeamName,
       awayTeamName,
       startsAt:
-        dateTime && !Number.isNaN(new Date(dateTime).getTime())
-          ? new Date(dateTime).toISOString()
+        hasConfirmedKickoff && !Number.isNaN(new Date(dateTime!).getTime())
+          ? new Date(dateTime!).toISOString()
           : undefined,
-      kickoffStatus: dateTime ? "confirmed" : "unknown",
+      kickoffStatus: hasConfirmedKickoff ? "confirmed" : "unknown",
       venue,
       score,
       status,
@@ -246,4 +292,3 @@ export class RealZaragozaOfficialProvider {
     return { patches, diagnostics };
   }
 }
-

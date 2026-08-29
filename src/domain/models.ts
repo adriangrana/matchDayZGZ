@@ -107,11 +107,36 @@ export interface SportsDashboardSnapshot extends MatchDaySnapshot {
   syncTimes: SportsSyncTimes;
   standingsStatus: StandingsStatus;
   missingGroupResults: number;
+  groupOneUpcomingMatches: Match[];
+  groupOneRecentMatches: Match[];
+  groupOneStandings: StandingEntry[];
+  groupOneStandingsStatus: StandingsStatus;
+  groupOneMissingGroupResults: number;
+  groupOneGeneratedAt: IsoDateString;
+  groupTwoUpcomingMatches: Match[];
+  groupTwoRecentMatches: Match[];
+  groupTwoFullStandings: StandingEntry[];
+  groupTwoStandingsStatus: StandingsStatus;
+  groupTwoMissingGroupResults: number;
+}
+
+export interface SportsGroupSnapshot {
+  group: "group-1" | "group-2";
+  competition: Competition;
+  matches: Match[];
+  standings: StandingEntry[];
+  standingsStatus: StandingsStatus;
+  missingGroupResults: number;
+  generatedAt: IsoDateString;
+  stale: boolean;
+  sourceErrors: string[];
 }
 
 export interface SportsCatalogSnapshot {
+  competition: Competition;
   season: string;
   matches: Match[];
+  allMatches: Match[];
   standings: StandingEntry[];
   standingsStatus: StandingsStatus;
   missingGroupResults: number;

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Header } from "@/src/components/header";
 import { MatchesExplorer } from "@/src/components/matches-explorer";
-import { getSportsCatalogSnapshot } from "@/src/services/sports-catalog";
+import { getPersistedSportsCatalogSnapshot } from "@/src/services/persisted-sports-catalog";
 import { isConfirmedKickoff, matchDateLabel } from "@/src/services/sports-presenter";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Partidos 2026/27 · MatchDay ZGZ",
@@ -21,8 +23,8 @@ function formattedSync(value: string): string {
   }).format(new Date(value));
 }
 
-export default function MatchesPage() {
-  const snapshot = getSportsCatalogSnapshot();
+export default async function MatchesPage() {
+  const snapshot = await getPersistedSportsCatalogSnapshot();
   const homeMatches = snapshot.matches.filter(
     (match) => match.homeTeam.id === "real-zaragoza",
   ).length;
@@ -45,7 +47,7 @@ export default function MatchesPage() {
           <div className="sports-page-intro">
             <div>
               <p className="eyebrow">Temporada {snapshot.season}</p>
-              <h1>Partidos</h1>
+              <h1 className="page-title">Partidos</h1>
             </div>
             <p>
               Los 38 encuentros de Primera Federación del Real Zaragoza. Las

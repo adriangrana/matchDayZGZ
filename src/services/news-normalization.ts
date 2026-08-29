@@ -184,7 +184,11 @@ function imageCandidate(item: RawNewsItem): string | undefined {
   }
 
   if (url.protocol !== "https:") return undefined;
-  if (/(logo|icon|avatar|placeholder|default|pixel)/i.test(url.pathname)) {
+  if (
+    /(?:^|[/_.-])(logo|icon|avatar|placeholder|pixel)(?:[/_.-]|$)/i.test(
+      url.pathname,
+    )
+  ) {
     return undefined;
   }
   if (
@@ -232,4 +236,3 @@ export function normalizeNewsItem(
     source,
   };
 }
-

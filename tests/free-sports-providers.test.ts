@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import fallback from "../src/data/rfef-group-2-2026-27.json";
+import { groupOneTeamNames } from "../src/data/primera-federacion-teams";
 import { classifyRoundKickoffs } from "../src/providers/as-primera-federacion-provider";
 import { ComputedStandingsProvider } from "../src/providers/computed-standings-provider";
 import type { NormalizedGroupMatch } from "../src/providers/free-sports-types";
 import { parseOfficialMatchesHtml } from "../src/providers/real-zaragoza-official-provider";
 import {
   parseRfefCalendarLines,
+  parseRfefCalendarLinesForGroup,
   validateRfefCalendar,
 } from "../src/providers/rfef-pdf-calendar-provider";
 import { isPathAllowedByRobots } from "../src/services/robots-policy";
@@ -42,6 +44,29 @@ test("extrae y valida las 38 jornadas completas del calendario RFEF", () => {
     38,
   );
   assert.equal(matches[0]?.kickoffStatus, "unknown");
+});
+
+test("extrae y valida las 38 jornadas completas del Grupo I", () => {
+  const lines: string[] = [];
+  for (let round = 1; round <= 38; round += 1) {
+    lines.push(`Jornada ${round} (30/08/2026)`);
+    for (let index = 0; index < 10; index += 1) {
+      const home = groupOneTeamNames[(index + round) % 10]!;
+      const away = groupOneTeamNames[10 + ((index + round) % 10)]!;
+      lines.push(`${home} ${away}`);
+    }
+  }
+  const matches = parseRfefCalendarLinesForGroup(
+    lines,
+    "group-1",
+    "2026-08-29T12:00:00.000Z",
+  );
+  assert.equal(matches.length, 380);
+  assert.equal(
+    new Set(matches.flatMap((match) => [match.homeTeam.id, match.awayTeam.id])).size,
+    20,
+  );
+  assert.equal(matches.some((match) => match.homeTeam.id === "real-zaragoza"), false);
 });
 
 test("rechaza una revisión incompleta del PDF y conserva el fallback", () => {
@@ -87,6 +112,52 @@ test("extrae solo hechos mínimos de una tarjeta oficial sintética", () => {
   assert.equal(JSON.stringify(patches).includes("escudo.png"), false);
 });
 
+test("extrae el horario desde el JSON embebido de la página oficial", () => {
+  const html = `
+    <article class="MkFootballMatchCard MkFootballMatchCard--status-pending"
+      aria-label="Gimnàstic de Tarragona vs Real Zaragoza">
+      <span class="MkFootballMatchCard__competition">Primera Federación</span>
+      <span class="MkFootballMatchCard__matchWeek">J1</span>
+      <span class="MkFootballMatchCard__venue">Nou Estadi Costa Daurada</span>
+      {"homeTeam":{"shortName":"Gimnàstic de Tarragona"},
+       "awayTeam":{"shortName":"Real Zaragoza"},
+       "date":"2026-08-30","time":"2026-08-30T19:30:00Z"}
+    </article>
+  `;
+
+  const patches = parseOfficialMatchesHtml(
+    html,
+    "https://www.realzaragoza.com/partidos",
+    "2026-08-05T09:18:31.000Z",
+  );
+
+  assert.equal(patches.length, 1);
+  assert.equal(patches[0]?.kickoffStatus, "confirmed");
+  assert.equal(patches[0]?.startsAt, "2026-08-30T19:30:00.000Z");
+});
+
+test("mantiene pendiente el horario JSON de medianoche usado como placeholder", () => {
+  const html = `
+    <article class="MkFootballMatchCard MkFootballMatchCard--status-pending"
+      aria-label="Real Zaragoza vs Antequera CF">
+      <span class="MkFootballMatchCard__competition">Primera Federación</span>
+      <span class="MkFootballMatchCard__matchWeek">J2</span>
+      {"homeTeam":{"shortName":"Real Zaragoza"},
+       "awayTeam":{"shortName":"Antequera CF"},
+       "date":"2026-09-06","time":"2026-09-06T00:00:00Z"}
+    </article>
+  `;
+
+  const patches = parseOfficialMatchesHtml(
+    html,
+    "https://www.realzaragoza.com/partidos",
+    "2026-08-05T09:18:31.000Z",
+  );
+
+  assert.equal(patches[0]?.kickoffStatus, "unknown");
+  assert.equal(patches[0]?.startsAt, undefined);
+});
+
 test("calcula PJ, victorias, empates, goles y puntos localmente", () => {
   const first = structuredClone(fallbackMatches[0]!);
   const second = structuredClone(fallbackMatches[1]!);
@@ -128,4 +199,3 @@ test("respeta allow y disallow del grupo wildcard de robots.txt", () => {
   assert.equal(isPathAllowedByRobots(robots, "/api/private"), false);
   assert.equal(isPathAllowedByRobots(robots, "/api/public/table"), true);
 });
-

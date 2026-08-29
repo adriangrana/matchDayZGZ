@@ -1,7 +1,9 @@
 import {
+  groupOneTeams,
   normalizeTeamName,
   resolveGroupTwoTeam,
 } from "@/src/data/primera-federacion-teams";
+import { officialSportsFacts } from "@/src/data/official-sports-facts";
 import type { Team } from "@/src/domain/models";
 import { AsPrimeraFederacionProvider } from "@/src/providers/as-primera-federacion-provider";
 import { ComputedStandingsProvider } from "@/src/providers/computed-standings-provider";
@@ -14,6 +16,7 @@ import type {
 import { RealZaragozaOfficialProvider } from "@/src/providers/real-zaragoza-official-provider";
 import {
   RfefPdfCalendarProvider,
+  RFEF_GROUP_ONE_CALENDAR_URL,
   RFEF_CALENDAR_URL,
 } from "@/src/providers/rfef-pdf-calendar-provider";
 import { FreeSportsSnapshotStore } from "@/src/services/free-sports-snapshot-store";
@@ -106,14 +109,40 @@ function mergeOfficialPatches(
   );
 }
 
+function mergeGroupOneFacts(
+  calendar: NormalizedGroupMatch[],
+  fetchedAt: string,
+): NormalizedGroupMatch[] {
+  return calendar.map((match) => {
+    const fact = officialSportsFacts.find(
+      (candidate) =>
+        candidate.round === match.round &&
+        normalizeTeamName(candidate.homeTeamName) === normalizeTeamName(match.homeTeam.name) &&
+        normalizeTeamName(candidate.awayTeamName) === normalizeTeamName(match.awayTeam.name) &&
+        candidate.source.id.startsWith("rfef-"),
+    );
+    if (!fact) return match;
+    return {
+      ...match,
+      startsAt: fact.startsAt ?? match.startsAt,
+      kickoffStatus: fact.startsAt ? fact.kickoffStatus : match.kickoffStatus,
+      score: fact.score ?? match.score,
+      status: fact.status ?? match.status,
+      sources: [fact.source, ...match.sources],
+      updatedAt: fact.source.fetchedAt || fetchedAt,
+    };
+  });
+}
+
 function unavailableRfefDiagnostic(
   now: Date,
   error: unknown,
+  group: "group-1" | "group-2" = "group-2",
 ): SourceDiagnostic {
   return {
-    id: "rfef-calendar-pdf",
+    id: group === "group-1" ? "rfef-calendar-pdf-group-1" : "rfef-calendar-pdf",
     name: "Calendario oficial RFEF",
-    url: RFEF_CALENDAR_URL,
+    url: group === "group-1" ? RFEF_GROUP_ONE_CALENDAR_URL : RFEF_CALENDAR_URL,
     policyStatus: "unavailable",
     cache: "miss",
     extracted: { matches: 0, standings: 0 },
@@ -173,6 +202,7 @@ export class FreeSportsAggregator {
     const diagnostics: SourceDiagnostic[] = [];
     const previous = await this.store.read();
     let calendar: NormalizedGroupMatch[] | undefined;
+    let groupOneCalendar: NormalizedGroupMatch[] = [];
 
     try {
       const rfef = await new RfefPdfCalendarProvider(
@@ -181,14 +211,29 @@ export class FreeSportsAggregator {
       calendar = rfef.matches;
       diagnostics.push(rfef.diagnostic);
     } catch (error) {
-      diagnostics.push(unavailableRfefDiagnostic(now, error));
+      diagnostics.push(unavailableRfefDiagnostic(now, error, "group-2"));
       const previousCalendar = previous?.matches.filter((match) =>
         match.sources.some((source) => source.id === "rfef-calendar-pdf"),
       );
       calendar =
         previousCalendar?.length === 380
           ? previousCalendar
-          : this.fallbackMatches;
+        : this.fallbackMatches;
+    }
+
+    try {
+      const rfefGroupOne = await new RfefPdfCalendarProvider(this.http).getCalendar({
+        ...options,
+        group: "group-1",
+      });
+      groupOneCalendar = mergeGroupOneFacts(rfefGroupOne.matches, rfefGroupOne.diagnostic.checkedAt);
+      diagnostics.push(rfefGroupOne.diagnostic);
+    } catch (error) {
+      diagnostics.push(unavailableRfefDiagnostic(now, error, "group-1"));
+      const previousGroupOne = previous?.groupOneMatches?.filter((match) =>
+        match.sources.some((source) => source.id === "rfef-calendar-pdf"),
+      );
+      groupOneCalendar = previousGroupOne?.length === 380 ? previousGroupOne : [];
     }
 
     const asResult = new AsPrimeraFederacionProvider().inspect(now);
@@ -202,10 +247,19 @@ export class FreeSportsAggregator {
     const matches = mergeOfficialPatches(calendar, official.patches);
     const computed = new ComputedStandingsProvider();
     const completeResults = completeRoundResults(matches);
-    const standings = computed.compute(completeResults.matches);
+    const standings = computed.compute(
+      matches.filter((match) => match.status === "finished" && match.score),
+    );
+    const groupOneCompleteResults = completeRoundResults(groupOneCalendar);
+    const groupOneStandings = new ComputedStandingsProvider(groupOneTeams).compute(
+      groupOneCalendar.filter(
+        (match) => match.status === "finished" && match.score,
+      ),
+    );
     const publishedStandings = undefined;
     const differences = [
       ...completeResults.differences,
+      ...groupOneCompleteResults.differences,
       ...computed.compare(standings, publishedStandings),
     ];
     const zaragozaMatches = matches.filter(
@@ -219,8 +273,10 @@ export class FreeSportsAggregator {
       requestCount: this.http.requestCount,
       diagnostics,
       matches,
+      groupOneMatches: groupOneCalendar,
       zaragozaMatches,
       standings,
+      groupOneStandings,
       publishedStandings,
       differences,
       reviewRequired:
@@ -228,7 +284,7 @@ export class FreeSportsAggregator {
         diagnostics.some(
           (diagnostic) =>
             diagnostic.policyStatus === "unavailable" &&
-            diagnostic.id === "rfef-calendar-pdf",
+            diagnostic.id.startsWith("rfef-calendar-pdf"),
         ),
     };
     await this.store.write(snapshot);

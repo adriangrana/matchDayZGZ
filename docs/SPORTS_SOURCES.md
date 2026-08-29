@@ -6,10 +6,11 @@ y de uso personal.
 ## Contexto
 
 El Real Zaragoza compite en el Grupo II de Primera Federación 2026/27. La RFEF
-publicó el calendario oficial de 38 jornadas:
+publicó los calendarios oficiales de 38 jornadas para ambos grupos:
 
 - [Grupos de Primera Federación 2026/27](https://rfef.es/es/noticias/aprobados-los-grupos-de-primera-federacion-para-la-temporada-202627)
 - [PDF oficial del Grupo II](https://rfef.es/sites/default/files/2026-06/Primera_Federacion_Grupo_II.pdf)
+- [PDF oficial del Grupo I](https://rfef.es/sites/default/files/2026-06/Primera_Federacion_Grupo_I.pdf)
 
 ## Decisión vigente
 
@@ -34,16 +35,34 @@ y nunca conserva imágenes, escudos, logotipos o artículos.
 ## Arquitectura
 
 - `RfefPdfCalendarProvider`: descarga condicional, SHA-256, extracción y 380
-  partidos validados.
+  partidos validados por cada grupo.
 - `AsPrimeraFederacionProvider`: adaptador desacoplado, desactivado por política
   y regla probada para horarios genéricos `02:00`.
 - `RealZaragozaOfficialProvider`: confirmaciones oficiales y amistosos.
 - `ComputedStandingsProvider`: clasificación reproducible desde resultados.
 - `FreeSportsAggregator`: prioridad, último snapshot y diagnóstico conjunto.
 
-La portada puede leer la copia normalizada del PDF sin acceder a la red. Los
-comandos locales actualizan `.cache/` con ETag, Last-Modified, hash y el último
-snapshot válido.
+Inicio, Partidos y Clasificación leen primero el último snapshot válido de
+`.cache/`. Si falta, está corrupto o no contiene las 38 jornadas validadas,
+utilizan la copia normalizada compilada del PDF del Grupo II; el Grupo I se
+mantiene en su propio bloque del snapshot y se conserva como último dato válido.
+La caché conserva ETag,
+Last-Modified, hash y el snapshot anterior para evitar solicitudes duplicadas y
+pérdidas de datos.
+
+## Automatización local
+
+`npm run deploy:local` crea y mantiene en Runara el proceso
+`matchday-zgz-sync`. Al arrancar realiza una sincronización inicial y después:
+
+- revisa las páginas oficiales permitidas del Real Zaragoza cada 6 horas;
+- reutiliza durante 24 horas el calendario RFEF;
+- recalcula la clasificación local tras cada revisión, sin otra petición;
+- mantiene el snapshot anterior y lo marca como desactualizado si falla una
+  fuente esencial.
+
+La frecuencia general se puede ajustar con
+`SPORTS_SYNC_INTERVAL_HOURS`, cuyo valor predeterminado es `6`.
 
 ## Comandos
 

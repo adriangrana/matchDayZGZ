@@ -34,6 +34,7 @@ npm run sports:sync         # sincroniza las fuentes deportivas gratuitas
 npm run sports:inspect      # muestra extracción, caché, diferencias y cuota
 npm run sports:test-sources # comprueba robots y política de cada fuente
 npm run db:generate  # genera migraciones Drizzle
+npm run deploy:local  # local deploy con runara
 ```
 
 ## Variables de entorno
@@ -58,6 +59,7 @@ claves privadas.
 | `SPORTS_FIXTURES_CACHE_HOURS` | Caché de calendario y resultados, 6 horas |
 | `SPORTS_STANDINGS_CACHE_HOURS` | Caché de clasificación, 12 horas |
 | `SPORTS_METADATA_CACHE_HOURS` | Caché de equipo y competición, 24 horas |
+| `SPORTS_SYNC_INTERVAL_HOURS` | Intervalo del sincronizador deportivo local; 6 horas |
 | `NEWS_FEEDS` | Lista de RSS autorizados separada por comas |
 | `NEWS_DATA_MODE` | `real` para RSS o `demo` para volver temporalmente al fixture |
 | `NEWS_CACHE_MINUTES` | Duración de la caché de noticias; mínimo 5 minutos |
@@ -81,8 +83,9 @@ sus rutas no estén bloqueadas en `robots.txt`.
 
 La integración es exclusivamente local y no incorpora logotipos, escudos,
 fotografías ni artículos. Conserva ETag, Last-Modified, hash y el último snapshot
-en `.cache/`, ignorado por Git. Una copia normalizada y validada de las 38 jornadas
-permite mantener el calendario cuando una fuente no responde.
+en `.cache/`, ignorado por Git. Inicio, Partidos y Clasificación leen el último
+snapshot persistido; una copia normalizada y validada de las 38 jornadas permite
+mantener el calendario cuando una fuente no responde o el snapshot no es válido.
 
 Consulta
 [`docs/FREE_SCRAPING_STRATEGY.md`](./docs/FREE_SCRAPING_STRATEGY.md) para revisar
@@ -104,7 +107,22 @@ se activará cuando exista una instancia Supabase autorizada.
 
 ## Sincronización programada
 
-El endpoint interno acepta únicamente `POST` con el secreto configurado:
+`npm run deploy:local` registra en Runara el proceso
+`matchday-zgz-sync`. Este proceso se ejecuta junto a la web y:
+
+- actualiza noticias cada 30 minutos;
+- sincroniza las fuentes deportivas cada 6 horas;
+- respeta la caché propia de cada fuente: 6 horas para el Real Zaragoza y 24
+  horas para el calendario RFEF;
+- recalcula la clasificación local sin realizar una petición adicional;
+- conserva el último snapshot deportivo válido si una fuente falla.
+
+El proceso hace una primera sincronización al arrancar. El secreto interno se
+genera dentro del despliegue local, no se guarda en Git y no se imprime en los
+logs.
+
+Los endpoints internos aceptan únicamente `POST` autenticado. Para un scheduler
+externo, el endpoint de noticias también admite `NEWS_SYNC_SECRET`:
 
 ```bash
 curl -X POST \
@@ -112,9 +130,8 @@ curl -X POST \
   https://tu-dominio.example/api/internal/news/sync
 ```
 
-En producción debe programarse cada 30 minutos desde el scheduler del proveedor. La
-URL pública y `NEWS_SYNC_SECRET` se configuran como secretos del scheduler. Una
-frecuencia inferior no aporta valor para noticias y aumenta la carga sobre los medios.
+Una frecuencia inferior no aporta valor para noticias y aumenta la carga sobre
+los medios.
 
 Para desarrollo no es necesario exponer el endpoint: usa `npm run sync:news`.
 

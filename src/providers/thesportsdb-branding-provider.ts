@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import {
+  groupOneTeamAliases,
   groupTwoTeamAliases,
   groupTwoTeams,
   normalizeTeamName,
@@ -174,8 +175,12 @@ export function validateBadgeBytes(
   return dimensions;
 }
 
-function fingerprint(): string {
-  return groupTwoTeams
+function aliasesForTeam(team: Team): string[] {
+  return groupTwoTeamAliases[team.id] ?? groupOneTeamAliases[team.id] ?? [];
+}
+
+function fingerprint(teams: Team[]): string {
+  return teams
     .map((team) => team.id)
     .sort()
     .join("|");
@@ -236,6 +241,7 @@ export class TheSportsDbBrandingProvider implements TeamBrandingProvider {
       "public",
       "team-badges",
     ),
+    private readonly teams: Team[] = groupTwoTeams,
   ) {}
 
   async inspect(): Promise<TeamBrandingSnapshot | undefined> {
@@ -335,7 +341,7 @@ export class TheSportsDbBrandingProvider implements TeamBrandingProvider {
     team: Team,
     now: Date,
   ): Promise<TeamBrandingRecord> {
-    const aliases = groupTwoTeamAliases[team.id] ?? [];
+    const aliases = aliasesForTeam(team);
     const queries = [team.name, ...aliases];
     let ambiguous: TheSportsDbTeam | undefined;
 
@@ -424,7 +430,7 @@ export class TheSportsDbBrandingProvider implements TeamBrandingProvider {
     options: { force?: boolean; now?: Date } = {},
   ): Promise<TeamBrandingSnapshot> {
     const now = options.now ?? new Date();
-    const currentFingerprint = fingerprint();
+    const currentFingerprint = fingerprint(this.teams);
     const cached = await this.inspect();
     if (
       !options.force &&
@@ -446,14 +452,14 @@ export class TheSportsDbBrandingProvider implements TeamBrandingProvider {
 
     this.requests = 0;
     const records: TeamBrandingRecord[] = [];
-    for (const team of groupTwoTeams) {
+    for (const team of this.teams) {
       try {
         records.push(await this.resolveTeam(team, now));
       } catch (error) {
         records.push({
           canonicalTeamId: team.id,
           canonicalName: team.name,
-          aliases: groupTwoTeamAliases[team.id] ?? [],
+          aliases: aliasesForTeam(team),
           provider: "thesportsdb",
           syncedAt: now.toISOString(),
           validation: "rejected",

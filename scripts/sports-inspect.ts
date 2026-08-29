@@ -39,6 +39,10 @@ console.log(
       reviewRequired: snapshot.reviewRequired,
       lastUpdate: snapshot.syncedAt,
       totalRequests: snapshot.requestCount,
+      groupOne: {
+        matches: snapshot.groupOneMatches?.length ?? 0,
+        standings: snapshot.groupOneStandings?.length ?? 0,
+      },
       teamBadges: {
         provider: branding.provider,
         lastUpdate: branding.syncedAt,
