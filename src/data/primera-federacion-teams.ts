@@ -70,7 +70,7 @@ export const groupOneTeamNames = [
   "Arenas Club",
   "Racing Club Ferrol",
   "Barakaldo CF",
-  "CyD Leonesa",
+  "Cultural y Deportiva Leonesa",
   "CP Cacereño",
   "CD Mirandés",
   "AD Mérida",
@@ -90,9 +90,10 @@ export const groupOneTeamNames = [
 ] as const;
 
 export const groupOneTeams: Team[] = groupOneTeamNames.map((name) => ({
-  id: slug(name),
+  id: name === "Cultural y Deportiva Leonesa" ? "cyd-leonesa" : slug(name),
   name,
   shortName: name
+    .replace("Cultural y Deportiva Leonesa", "Cultural Leonesa")
     .replace("Racing Club Ferrol", "Racing Ferrol")
     .replace("RC Deportivo Fabril", "Depor Fabril")
     .replace("Real Avilés Industrial", "Real Avilés")
@@ -127,7 +128,7 @@ for (const team of groupOneTeams) {
 export const groupOneTeamAliases: Record<string, string[]> = {
   "barakaldo-cf": ["Barakaldo"],
   "racing-club-ferrol": ["Racing Ferrol", "Racing Club de Ferrol"],
-  "cyd-leonesa": ["Cultural y Deportiva Leonesa", "Cultural Leonesa"],
+  "cyd-leonesa": ["CyD Leonesa", "Cultural y Deportiva Leonesa", "Cultural Leonesa"],
   "cp-cacereno": ["CP Cacereño", "Cacereño"],
   "cd-mirandes": ["CD Mirandés", "Mirandés"],
   "ad-merida": ["AD Mérida", "Mérida"],
