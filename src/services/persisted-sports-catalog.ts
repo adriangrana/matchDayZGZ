@@ -14,6 +14,7 @@ import {
   getSportsCatalogSnapshot,
 } from "@/src/services/sports-catalog";
 import { FreeSportsSnapshotStore } from "@/src/services/free-sports-snapshot-store";
+import { withRuntimeMatchStatuses } from "@/src/services/runtime-match-status";
 
 function diagnosticErrors(snapshot: FreeSportsInspection): string[] {
   return snapshot.diagnostics
@@ -99,6 +100,23 @@ export function catalogCollectionFromInspection(
   return { groupTwo, groupOne };
 }
 
+function withRuntimeStatuses(
+  collection: SportsCatalogCollection,
+  now = new Date(),
+): SportsCatalogCollection {
+  return {
+    groupTwo: {
+      ...collection.groupTwo,
+      matches: withRuntimeMatchStatuses(collection.groupTwo.matches, now),
+      allMatches: withRuntimeMatchStatuses(collection.groupTwo.allMatches, now),
+    },
+    groupOne: {
+      ...collection.groupOne,
+      matches: withRuntimeMatchStatuses(collection.groupOne.matches, now),
+    },
+  };
+}
+
 function emptyGroupOneSnapshot(now = new Date().toISOString()): SportsGroupSnapshot {
   return createSportsGroupSnapshot([], "group-1", now, undefined, {
     stale: true,
@@ -109,25 +127,30 @@ function emptyGroupOneSnapshot(now = new Date().toISOString()): SportsGroupSnaps
 export async function getPersistedSportsCatalogCollection(
   store = new FreeSportsSnapshotStore(),
 ): Promise<SportsCatalogCollection> {
+  const now = new Date();
   try {
     const persisted = await store.read();
-    return persisted
+    const collection = persisted
       ? catalogCollectionFromInspection(persisted)
       : { groupTwo: getSportsCatalogSnapshot(), groupOne: emptyGroupOneSnapshot() };
+    return withRuntimeStatuses(collection, now);
   } catch (error) {
     const fallback = getSportsCatalogSnapshot();
-    return {
-      groupTwo: {
-        ...fallback,
-        stale: true,
-        sourceErrors: [
-          error instanceof Error
-            ? `No se pudo leer el snapshot actualizado: ${error.message}`
-            : "No se pudo leer el snapshot actualizado",
-        ],
+    return withRuntimeStatuses(
+      {
+        groupTwo: {
+          ...fallback,
+          stale: true,
+          sourceErrors: [
+            error instanceof Error
+              ? `No se pudo leer el snapshot actualizado: ${error.message}`
+              : "No se pudo leer el snapshot actualizado",
+          ],
+        },
+        groupOne: emptyGroupOneSnapshot(),
       },
-      groupOne: emptyGroupOneSnapshot(),
-    };
+      now,
+    );
   }
 }
 
