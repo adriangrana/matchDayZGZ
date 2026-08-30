@@ -17,6 +17,12 @@ function homeStandings(
   return entries.slice(start, start + 5);
 }
 
+export function isGroupOverviewCurrentOrUpcoming(match: {
+  status: string;
+}): boolean {
+  return match.status === "scheduled" || match.status === "live";
+}
+
 export async function getFreeSportsDashboardSnapshot(
   now = new Date(),
 ): Promise<SportsDashboardSnapshot | undefined> {
@@ -43,7 +49,7 @@ export async function getFreeSportsDashboardSnapshot(
     .slice(-10)
     .reverse();
   const groupOneUpcomingMatches = groupOne.matches
-    .filter((match) => match.status === "scheduled")
+    .filter(isGroupOverviewCurrentOrUpcoming)
     .slice(0, 10);
   const groupTwoOverviewMatches = catalog.allMatches ?? catalog.matches;
   const groupTwoRecentMatches = groupTwoOverviewMatches
@@ -54,7 +60,7 @@ export async function getFreeSportsDashboardSnapshot(
     )
     .slice(0, 10);
   const groupTwoUpcomingMatches = groupTwoOverviewMatches
-    .filter((match) => match.status === "scheduled")
+    .filter(isGroupOverviewCurrentOrUpcoming)
     .slice(0, 10);
 
   const standings =
