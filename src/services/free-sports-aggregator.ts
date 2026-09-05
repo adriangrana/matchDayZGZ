@@ -38,6 +38,17 @@ function genericTeam(name: string): Team {
   };
 }
 
+function madridDateBase(iso: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(iso));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function samePair(
   match: NormalizedGroupMatch,
   patch: OfficialMatchPatch,
@@ -64,7 +75,7 @@ function sameNormalizedPair(
   );
 }
 
-function mergeOfficialPatches(
+export function mergeOfficialPatches(
   calendar: NormalizedGroupMatch[],
   patches: OfficialMatchPatch[],
 ): NormalizedGroupMatch[] {
@@ -79,6 +90,7 @@ function mergeOfficialPatches(
         (current.status === "live" || current.status === "finished");
       merged[index] = {
         ...current,
+        dateBase: patch.startsAt ? madridDateBase(patch.startsAt) : current.dateBase,
         startsAt: patch.startsAt ?? current.startsAt,
         kickoffStatus: patch.startsAt
           ? patch.kickoffStatus
@@ -104,7 +116,7 @@ function mergeOfficialPatches(
       id: `real-zaragoza-official-${patch.round ?? "extra"}-${home.id}-${away.id}`,
       round: patch.round ?? 0,
       roundLabel: patch.round ? `Jornada ${patch.round}` : "Amistoso",
-      dateBase: patch.startsAt.slice(0, 10),
+      dateBase: madridDateBase(patch.startsAt),
       startsAt: patch.startsAt,
       kickoffStatus: patch.kickoffStatus,
       homeTeam: home,
@@ -133,6 +145,7 @@ export function mergeRfefResultPatches(
     if (!patch) return match;
     return {
       ...match,
+      dateBase: patch.startsAt ? madridDateBase(patch.startsAt) : match.dateBase,
       startsAt: patch.startsAt ?? match.startsAt,
       kickoffStatus: patch.startsAt ? patch.kickoffStatus : match.kickoffStatus,
       score: patch.score ?? match.score,
@@ -158,12 +171,43 @@ export function mergeRfefFacts(
     if (!fact) return match;
     return {
       ...match,
+      dateBase: fact.startsAt ? madridDateBase(fact.startsAt) : match.dateBase,
       startsAt: fact.startsAt ?? match.startsAt,
       kickoffStatus: fact.startsAt ? fact.kickoffStatus : match.kickoffStatus,
       score: fact.score ?? match.score,
       status: fact.status ?? match.status,
       sources: [fact.source, ...match.sources],
       updatedAt: fact.source.fetchedAt || fetchedAt,
+    };
+  });
+}
+
+export function mergePersistedMatchFacts(
+  calendar: NormalizedGroupMatch[],
+  persisted: NormalizedGroupMatch[] = [],
+): NormalizedGroupMatch[] {
+  const byId = new Map(persisted.map((match) => [match.id, match]));
+  return calendar.map((match) => {
+    const previous = byId.get(match.id);
+    if (!previous) return match;
+    const confirmedKickoff = previous.kickoffStatus === "confirmed";
+    const finished = previous.status === "finished" && Boolean(previous.score);
+    if (!confirmedKickoff && !finished && !previous.venue) return match;
+    const sources = new Map(
+      [...previous.sources, ...match.sources].map((source) => [source.id, source]),
+    );
+    return {
+      ...match,
+      dateBase: confirmedKickoff
+        ? madridDateBase(previous.startsAt)
+        : match.dateBase,
+      startsAt: confirmedKickoff ? previous.startsAt : match.startsAt,
+      kickoffStatus: confirmedKickoff ? "confirmed" : match.kickoffStatus,
+      venue: previous.venue ?? match.venue,
+      score: finished ? previous.score : match.score,
+      status: finished ? "finished" : match.status,
+      sources: [...sources.values()],
+      updatedAt: previous.updatedAt,
     };
   });
 }
@@ -281,7 +325,14 @@ export class FreeSportsAggregator {
     ).getOfficialData(options);
     diagnostics.push(...official.diagnostics);
 
-    const calendarWithFacts = mergeRfefFacts(calendar, now.toISOString());
+    const calendarWithFacts = mergeRfefFacts(
+      mergePersistedMatchFacts(calendar, previous?.matches),
+      now.toISOString(),
+    );
+    groupOneCalendar = mergePersistedMatchFacts(
+      groupOneCalendar,
+      previous?.groupOneMatches,
+    );
     const liveResults = await new RfefLiveResultsProvider(this.http).getResults(
       [...calendarWithFacts, ...groupOneCalendar],
       options,

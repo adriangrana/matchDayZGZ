@@ -9,6 +9,7 @@ import {
   StandingsZoneLegend,
 } from "@/src/components/standings-zones";
 import type { Match, StandingEntry } from "@/src/domain/models";
+import { selectCurrentRoundMatches } from "@/src/services/current-round";
 import {
   kickoffLabel,
   matchDateKey,
@@ -20,6 +21,7 @@ type GroupKey = "group-2" | "group-1";
 interface GroupOverview {
   key: GroupKey;
   label: string;
+  roundLabel: string;
   matches: Match[];
   standings: StandingEntry[];
   generatedAt: string;
@@ -30,8 +32,7 @@ function dedupeMatches(matches: Match[]): Match[] {
     .sort(
       (first, second) =>
         new Date(first.startsAt).getTime() - new Date(second.startsAt).getTime(),
-    )
-    .slice(0, 10);
+    );
 }
 
 function updatedLabel(value: string): string {
@@ -111,22 +112,34 @@ export function HomeGroupTabs({
 }) {
   const [activeKey, setActiveKey] = useState<GroupKey>("group-1");
   const groups = useMemo<GroupOverview[]>(
-    () => [
-      {
-        key: "group-1",
-        label: "Grupo I",
-        matches: dedupeMatches(groupOneMatches),
-        standings: sortStandings(groupOneStandings),
-        generatedAt: groupOneGeneratedAt,
-      },
-      {
-        key: "group-2",
-        label: "Grupo II",
-        matches: dedupeMatches(groupTwoMatches),
-        standings: sortStandings(groupTwoStandings),
-        generatedAt: groupTwoGeneratedAt,
-      },
-    ],
+    () => {
+      const groupOneRound = selectCurrentRoundMatches(
+        dedupeMatches(groupOneMatches),
+        todayDate,
+      );
+      const groupTwoRound = selectCurrentRoundMatches(
+        dedupeMatches(groupTwoMatches),
+        todayDate,
+      );
+      return [
+        {
+          key: "group-1",
+          label: "Grupo I",
+          roundLabel: groupOneRound.roundLabel,
+          matches: groupOneRound.matches,
+          standings: sortStandings(groupOneStandings),
+          generatedAt: groupOneGeneratedAt,
+        },
+        {
+          key: "group-2",
+          label: "Grupo II",
+          roundLabel: groupTwoRound.roundLabel,
+          matches: groupTwoRound.matches,
+          standings: sortStandings(groupTwoStandings),
+          generatedAt: groupTwoGeneratedAt,
+        },
+      ];
+    },
     [
       groupOneGeneratedAt,
       groupOneMatches,
@@ -134,6 +147,7 @@ export function HomeGroupTabs({
       groupTwoGeneratedAt,
       groupTwoMatches,
       groupTwoStandings,
+      todayDate,
     ],
   );
   const active = groups.find((group) => group.key === activeKey) ?? groups[0]!;
@@ -163,7 +177,7 @@ export function HomeGroupTabs({
           </div>
         </div>
         <div className="home-groups-summary">
-          <strong>Jornada 1</strong>
+          <strong>{active.roundLabel}</strong>
           <span>
             {liveCount > 0
               ? `${liveCount} en vivo`

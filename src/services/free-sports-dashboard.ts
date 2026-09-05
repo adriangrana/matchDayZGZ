@@ -17,10 +17,15 @@ function homeStandings(
   return entries.slice(start, start + 5);
 }
 
-export function isGroupOverviewCurrentOrUpcoming(match: {
-  status: string;
-}): boolean {
-  return match.status === "scheduled" || match.status === "live";
+export function isGroupOverviewCurrentOrUpcoming(
+  match: { status: string; startsAt?: string },
+  now = new Date(),
+): boolean {
+  if (match.status === "live") return true;
+  if (match.status !== "scheduled") return false;
+  if (!match.startsAt) return true;
+  const startsAt = new Date(match.startsAt).getTime();
+  return !Number.isFinite(startsAt) || startsAt >= now.getTime() - 3_600_000;
 }
 
 export async function getFreeSportsDashboardSnapshot(
@@ -49,7 +54,7 @@ export async function getFreeSportsDashboardSnapshot(
     .slice(-10)
     .reverse();
   const groupOneUpcomingMatches = groupOne.matches
-    .filter(isGroupOverviewCurrentOrUpcoming)
+    .filter((match) => isGroupOverviewCurrentOrUpcoming(match, now))
     .slice(0, 10);
   const groupTwoOverviewMatches = catalog.allMatches ?? catalog.matches;
   const groupTwoRecentMatches = groupTwoOverviewMatches
@@ -60,7 +65,7 @@ export async function getFreeSportsDashboardSnapshot(
     )
     .slice(0, 10);
   const groupTwoUpcomingMatches = groupTwoOverviewMatches
-    .filter(isGroupOverviewCurrentOrUpcoming)
+    .filter((match) => isGroupOverviewCurrentOrUpcoming(match, now))
     .slice(0, 10);
 
   const standings =

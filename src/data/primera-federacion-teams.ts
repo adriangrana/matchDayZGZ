@@ -165,6 +165,7 @@ export const groupTwoTeamAliases: Record<string, string[]> = {
   ],
   "juventud-de-torremolinos-cf": [
     "Juventud Torremolinos",
+    "Juventud Torremolinos CF",
     "Juventud de Torremolinos CF",
   ],
   "antequera-cf": ["Antequera"],

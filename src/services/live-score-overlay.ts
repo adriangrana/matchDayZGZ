@@ -64,15 +64,17 @@ function numericScore(score: SofascoreScore | undefined): number | undefined {
 function resetFalseRoundOneArticleMatch(
   match: NormalizedGroupMatch,
 ): NormalizedGroupMatch {
-  const fromRoundOneArticle = match.sources.some(
-    (source) => source.id === "rfef-results-article",
+  const roundOneArticle = match.sources.find(
+    (source) =>
+      source.id === "rfef-results-article" &&
+      /jornada-1(?:-|$)/.test(source.url),
   );
-  if (!fromRoundOneArticle || match.round === 1 || match.status !== "finished") {
+  if (!roundOneArticle || match.round === 1 || match.status !== "finished") {
     return match;
   }
 
   const sources = match.sources.filter(
-    (source) => source.id !== "rfef-results-article",
+    (source) => source !== roundOneArticle,
   );
   return {
     ...match,

@@ -11,7 +11,11 @@ import {
   parseRfefCalendarLinesForGroup,
   validateRfefCalendar,
 } from "../src/providers/rfef-pdf-calendar-provider";
-import { mergeRfefFacts } from "../src/services/free-sports-aggregator";
+import {
+  mergeOfficialPatches,
+  mergePersistedMatchFacts,
+  mergeRfefFacts,
+} from "../src/services/free-sports-aggregator";
 import { isPathAllowedByRobots } from "../src/services/robots-policy";
 
 const fallbackMatches = fallback.matches as NormalizedGroupMatch[];
@@ -112,6 +116,60 @@ test("aplica al Grupo II los horarios confirmados de la jornada", () => {
   assert.ok(europa);
   assert.equal(europa.kickoffStatus, "confirmed");
   assert.equal(europa.startsAt, "2026-08-30T19:15:00+02:00");
+});
+
+test("fusiona la variante oficial de Juventud Torremolinos sin duplicar la jornada", () => {
+  const calendarMatch = structuredClone(
+    fallbackMatches.find(
+      (match) =>
+        match.round === 3 &&
+        match.homeTeam.id === "juventud-de-torremolinos-cf" &&
+        match.awayTeam.id === "real-zaragoza",
+    )!,
+  );
+  const merged = mergeOfficialPatches([calendarMatch], [
+    {
+      round: 3,
+      homeTeamName: "Juventud Torremolinos CF",
+      awayTeamName: "Real Zaragoza",
+      startsAt: "2026-09-13T14:00:00.000Z",
+      kickoffStatus: "confirmed",
+      status: "scheduled",
+      source: {
+        id: "real-zaragoza-official",
+        name: "Real Zaragoza",
+        url: "https://www.realzaragoza.com/partidos",
+        fetchedAt: "2026-09-02T12:00:00.000Z",
+        isOfficial: true,
+      },
+    },
+  ]);
+
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0]?.id, calendarMatch.id);
+  assert.equal(merged[0]?.kickoffStatus, "confirmed");
+  assert.equal(merged[0]?.startsAt, "2026-09-13T14:00:00.000Z");
+  assert.deepEqual(
+    merged[0]?.sources.map((source) => source.id),
+    ["real-zaragoza-official", "rfef-calendar-pdf"],
+  );
+});
+
+test("conserva horarios y resultados válidos del snapshot anterior", () => {
+  const calendarMatch = structuredClone(fallbackMatches[0]!);
+  const persisted = {
+    ...structuredClone(calendarMatch),
+    startsAt: "2026-08-29T17:00:00.000Z",
+    kickoffStatus: "confirmed" as const,
+    status: "finished" as const,
+    score: { home: 2, away: 2 },
+  };
+  const [merged] = mergePersistedMatchFacts([calendarMatch], [persisted]);
+
+  assert.equal(merged?.startsAt, persisted.startsAt);
+  assert.equal(merged?.kickoffStatus, "confirmed");
+  assert.equal(merged?.status, "finished");
+  assert.deepEqual(merged?.score, { home: 2, away: 2 });
 });
 
 test("extrae solo hechos mínimos de una tarjeta oficial sintética", () => {

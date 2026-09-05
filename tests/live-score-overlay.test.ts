@@ -104,3 +104,30 @@ test("conserva los resultados reales de la jornada 1", () => {
   assert.equal(result?.status, "finished");
   assert.deepEqual(result?.score, { home: 1, away: 0 });
 });
+
+test("conserva los resultados del articulo de la jornada correspondiente", () => {
+  const roundTwoArticle: SourceReference = {
+    ...articleSource,
+    url: "https://rfef.es/es/noticias/resumenes-vive-la-jornada-2-de-primera-federacion",
+    fetchedAt: "2026-09-04T21:30:00.000Z",
+  };
+  const roundTwoResult = fixture({
+    id: "villarreal-algeciras-j2-finished",
+    round: 2,
+    startsAt: "2026-09-04T19:00:00+02:00",
+    status: "finished",
+    score: { home: 2, away: 1 },
+  });
+  roundTwoResult.sources = [roundTwoArticle, calendarSource];
+  roundTwoResult.updatedAt = roundTwoArticle.fetchedAt;
+
+  const [result] = sanitizeRoundOneArticleResults([roundTwoResult]);
+
+  assert.equal(result?.status, "finished");
+  assert.deepEqual(result?.score, { home: 2, away: 1 });
+  assert.equal(result?.kickoffStatus, "confirmed");
+  assert.equal(
+    result?.sources.some((source) => source.url.includes("jornada-2")),
+    true,
+  );
+});

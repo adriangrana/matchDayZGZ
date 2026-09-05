@@ -162,14 +162,16 @@ Copy-Item -LiteralPath $pdfWorkerSource `
 
 $sourceCache = Join-Path $RepositoryRoot ".cache"
 $deployedCache = Join-Path $DeployDirectory ".cache"
-if (Test-Path -LiteralPath $sourceCache) {
-  Copy-Item -LiteralPath $sourceCache `
+# Preserve runtime-only entries first, then let the freshly synchronized source
+# snapshot win. Reversing this order can restore stale fixtures during deploy.
+if (Test-Path -LiteralPath $deployedCache) {
+  Copy-Item -LiteralPath $deployedCache `
     -Destination (Join-Path $StagingDirectory ".cache") `
     -Recurse `
     -Force
 }
-if (Test-Path -LiteralPath $deployedCache) {
-  Copy-Item -LiteralPath $deployedCache `
+if (Test-Path -LiteralPath $sourceCache) {
+  Copy-Item -LiteralPath $sourceCache `
     -Destination (Join-Path $StagingDirectory ".cache") `
     -Recurse `
     -Force

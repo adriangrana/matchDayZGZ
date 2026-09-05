@@ -16,8 +16,6 @@ import {
 
 export const RFEF_LIVE_RESULTS_URL =
   "https://marcadores.rfef.es/pnfg/?accion=1";
-export const RFEF_ROUND_ONE_RESULTS_URL =
-  "https://rfef.es/es/noticias/resumenes-vive-la-jornada-1-de-primera-federacion";
 export const SOFASCORE_LIVE_RESULTS_URL =
   "https://api.sofascore.com/api/v1/sport/football/events/live";
 
@@ -160,6 +158,129 @@ function extractScore(block: string): { home: number; away: number } | undefined
   const score = block.match(/(?:^|\s)(\d{1,2})\s*[-–]\s*(\d{1,2})(?:\s|$)/);
   if (!score) return undefined;
   return { home: Number(score[1]), away: Number(score[2]) };
+}
+
+const spanishMonths: Record<string, number> = {
+  enero: 1,
+  febrero: 2,
+  marzo: 3,
+  abril: 4,
+  mayo: 5,
+  junio: 6,
+  julio: 7,
+  agosto: 8,
+  septiembre: 9,
+  octubre: 10,
+  noviembre: 11,
+  diciembre: 12,
+};
+
+function madridDateTimeIso(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+): string {
+  const guess = Date.UTC(year, month - 1, day, hour, minute);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+      timeZone: "Europe/Madrid",
+    })
+      .formatToParts(new Date(guess))
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+  const localGuess = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second),
+  );
+  return new Date(guess - (localGuess - guess)).toISOString();
+}
+
+function extractArticleKickoff(
+  block: string,
+  match: NormalizedGroupMatch,
+): string | undefined {
+  const normalized = stripHtml(block);
+  const date = normalized.match(
+    /\b(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i,
+  );
+  const time = normalized.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+  if (!date || !time) return undefined;
+  const month = spanishMonths[normalizeTeamName(date[2]!)];
+  const year = Number(match.dateBase.slice(0, 4));
+  if (!month || !year) return undefined;
+  return madridDateTimeIso(
+    year,
+    month,
+    Number(date[1]),
+    Number(time[1]),
+    Number(time[2]),
+  );
+}
+
+export function parseRfefRoundArticleHtml(
+  html: string,
+  matches: NormalizedGroupMatch[],
+  source: SourceReference,
+): OfficialMatchPatch[] {
+  const rows = [...html.matchAll(/<tr\b[\s\S]*?<\/tr>/gi)].map(
+    (match) => match[0],
+  );
+  const patches: OfficialMatchPatch[] = [];
+
+  for (const match of matches) {
+    const block = matchingBlock(rows.map(stripHtml), match);
+    if (!block) continue;
+    const startsAt = extractArticleKickoff(block, match);
+    if (!startsAt) continue;
+    const score = extractScore(block);
+    patches.push({
+      round: match.round,
+      homeTeamName: match.homeTeam.name,
+      awayTeamName: match.awayTeam.name,
+      startsAt,
+      kickoffStatus: "confirmed",
+      score,
+      status: score ? "finished" : undefined,
+      source,
+    });
+  }
+
+  return patches;
+}
+
+export function rfefRoundArticleUrl(round: number): string {
+  return `https://rfef.es/es/noticias/resumenes-vive-la-jornada-${round}-de-primera-federacion`;
+}
+
+export function selectRfefArticleRound(
+  matches: NormalizedGroupMatch[],
+  now = new Date(),
+): number | undefined {
+  const rounds = new Map<number, number>();
+  for (const match of matches) {
+    if (match.round <= 0 || rounds.has(match.round)) continue;
+    const timestamp = new Date(`${match.dateBase}T12:00:00Z`).getTime();
+    if (Number.isFinite(timestamp)) rounds.set(match.round, timestamp);
+  }
+  return [...rounds.entries()].sort((first, second) => {
+    const firstDistance = Math.abs(first[1] - now.getTime());
+    const secondDistance = Math.abs(second[1] - now.getTime());
+    return firstDistance - secondDistance || first[0] - second[0];
+  })[0]?.[0];
 }
 
 function inferStatus(
@@ -392,6 +513,10 @@ export class RfefLiveResultsProvider {
     let livePatches: OfficialMatchPatch[] = [];
     let fallbackLivePatches: OfficialMatchPatch[] = [];
     let articlePatches: OfficialMatchPatch[] = [];
+    const articleRound = selectRfefArticleRound(matches, now);
+    const articleUrl = articleRound
+      ? rfefRoundArticleUrl(articleRound)
+      : undefined;
 
     try {
       const result = await fetchRfefLiveHtml();
@@ -463,7 +588,10 @@ export class RfefLiveResultsProvider {
     }
 
     try {
-      const article = await this.http.get(RFEF_ROUND_ONE_RESULTS_URL, {
+      if (!articleUrl || !articleRound) {
+        throw new Error("No se pudo determinar la jornada vigente");
+      }
+      const article = await this.http.get(articleUrl, {
         maxAgeMs: TWO_MINUTES_MS,
         accept: "text/html,application/xhtml+xml",
         timeoutMs: 10_000,
@@ -473,20 +601,21 @@ export class RfefLiveResultsProvider {
       });
       const source: SourceReference = {
         id: "rfef-results-article",
-        name: "RFEF · resultados de la jornada",
-        url: RFEF_ROUND_ONE_RESULTS_URL,
+        name: `RFEF · horarios y resultados de la jornada ${articleRound}`,
+        url: articleUrl,
         fetchedAt: article.fetchedAt,
         isOfficial: true,
       };
-      articlePatches = parseRfefResultsHtml(responseText(article), matches, source, {
-        now,
-        finalOnly: true,
-      });
+      articlePatches = parseRfefRoundArticleHtml(
+        responseText(article),
+        matches.filter((match) => match.round === articleRound),
+        source,
+      );
       diagnostics.push(
         diagnostic(
           "rfef-results-article",
-          "RFEF · resultados de la jornada",
-          RFEF_ROUND_ONE_RESULTS_URL,
+          `RFEF · horarios y resultados de la jornada ${articleRound}`,
+          articleUrl,
           article.checkedAt,
           articlePatches.length,
           { httpStatus: article.status, cache: article.cache },
@@ -497,7 +626,7 @@ export class RfefLiveResultsProvider {
         diagnostic(
           "rfef-results-article",
           "RFEF · resultados de la jornada",
-          RFEF_ROUND_ONE_RESULTS_URL,
+          articleUrl ?? "https://rfef.es/es/noticias",
           checkedAt,
           0,
           { error: error instanceof Error ? error.message : "Error de resultados RFEF" },

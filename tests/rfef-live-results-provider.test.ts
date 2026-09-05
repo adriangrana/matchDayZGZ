@@ -7,8 +7,11 @@ import {
 import type { SourceReference } from "../src/domain/models";
 import type { NormalizedGroupMatch } from "../src/providers/free-sports-types";
 import {
+  parseRfefRoundArticleHtml,
   parseRfefResultsHtml,
   parseSofascoreLivePayload,
+  rfefRoundArticleUrl,
+  selectRfefArticleRound,
 } from "../src/providers/rfef-live-results-provider";
 
 const source: SourceReference = {
@@ -124,4 +127,60 @@ test("marca como final un resultado publicado por RFEF", () => {
 
   assert.deepEqual(patch?.score, { home: 0, away: 1 });
   assert.equal(patch?.status, "finished");
+});
+
+test("extrae los horarios oficiales de ambos grupos desde la jornada vigente", () => {
+  const groupOne = match(
+    requireGroupOneTeam("CD Mirandés"),
+    requireGroupOneTeam("UD Ourense"),
+    "2026-09-06T12:00:00+02:00",
+  );
+  const groupTwo = match(
+    requireGroupTwoTeam("Real Zaragoza"),
+    requireGroupTwoTeam("Antequera CF"),
+    "2026-09-06T12:00:00+02:00",
+  );
+  for (const fixture of [groupOne, groupTwo]) {
+    fixture.round = 2;
+    fixture.roundLabel = "Jornada 2";
+    fixture.dateBase = "2026-09-06";
+    fixture.kickoffStatus = "unknown";
+  }
+  const html = `
+    <table>
+      <tr><td>Sábado 05 de septiembre</td><td>16:30</td><td>CD Mirandés - UD Ourense</td><td>RESUMEN</td></tr>
+      <tr><td>Sábado 05 de septiembre</td><td>21:00</td><td>Real Zaragoza - Antequera CF</td><td>RESUMEN</td></tr>
+    </table>
+  `;
+  const patches = parseRfefRoundArticleHtml(html, [groupOne, groupTwo], source);
+
+  assert.equal(patches.length, 2);
+  assert.equal(patches[0]?.startsAt, "2026-09-05T14:30:00.000Z");
+  assert.equal(patches[1]?.startsAt, "2026-09-05T19:00:00.000Z");
+  assert.ok(patches.every((patch) => patch.kickoffStatus === "confirmed"));
+});
+
+test("selecciona y construye la URL de la jornada más cercana", () => {
+  const first = match(
+    requireGroupTwoTeam("Gimnàstic de Tarragona"),
+    requireGroupTwoTeam("Real Zaragoza"),
+    "2026-08-30T12:00:00+02:00",
+  );
+  const second = match(
+    requireGroupTwoTeam("Real Zaragoza"),
+    requireGroupTwoTeam("Antequera CF"),
+    "2026-09-06T12:00:00+02:00",
+  );
+  second.round = 2;
+  second.roundLabel = "Jornada 2";
+  second.dateBase = "2026-09-06";
+
+  assert.equal(
+    selectRfefArticleRound([first, second], new Date("2026-09-05T12:00:00Z")),
+    2,
+  );
+  assert.equal(
+    rfefRoundArticleUrl(2),
+    "https://rfef.es/es/noticias/resumenes-vive-la-jornada-2-de-primera-federacion",
+  );
 });

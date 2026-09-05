@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import styles from "@/src/components/header-controls.module.css";
 
 type SyncState = "idle" | "syncing" | "success" | "partial" | "error";
@@ -22,16 +22,15 @@ const stateClass: Record<SyncState, string> = {
 };
 
 export function SyncButton() {
-  const [available, setAvailable] = useState(false);
-  const [state, setState] = useState<SyncState>("idle");
-
-  useEffect(() => {
-    setAvailable(
+  const available = useSyncExternalStore(
+    () => () => undefined,
+    () =>
       window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        window.location.hostname === "::1",
-    );
-  }, []);
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1",
+    () => false,
+  );
+  const [state, setState] = useState<SyncState>("idle");
 
   if (!available) return null;
 

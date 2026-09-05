@@ -8,3 +8,21 @@ test("la jornada conserva partidos en vivo además de los programados", () => {
   assert.equal(isGroupOverviewCurrentOrUpcoming({ status: "finished" }), false);
   assert.equal(isGroupOverviewCurrentOrUpcoming({ status: "postponed" }), false);
 });
+
+test("no muestra como próximos los partidos programados que ya quedaron atrás", () => {
+  const now = new Date("2026-09-05T11:32:00.000Z");
+  assert.equal(
+    isGroupOverviewCurrentOrUpcoming(
+      { status: "scheduled", startsAt: "2026-08-30T19:15:00.000Z" },
+      now,
+    ),
+    false,
+  );
+  assert.equal(
+    isGroupOverviewCurrentOrUpcoming(
+      { status: "scheduled", startsAt: "2026-09-05T19:00:00.000Z" },
+      now,
+    ),
+    true,
+  );
+});
