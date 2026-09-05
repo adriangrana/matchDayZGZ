@@ -4,6 +4,7 @@ import { FreeSportsSnapshotStore } from "@/src/services/free-sports-snapshot-sto
 import { applyRfefCurrentRoundResults } from "@/src/services/rfef-current-round-results";
 import { sanitizeSportsSnapshot } from "@/src/services/sports-snapshot-sanitizer";
 import { rfefFallbackMatches } from "@/src/services/sports-catalog";
+import { applyVerifiedHistoricalResults } from "@/src/services/verified-historical-results";
 
 declare global {
   var __matchDayFreeSportsSync:
@@ -26,7 +27,8 @@ export function synchronizeFreeSports(options: {
       const overlaid = await applyLiveScoreOverlay(withCurrentRound, {
         now: options.now,
       });
-      const sanitized = sanitizeSportsSnapshot(overlaid, { now: options.now });
+      const withHistory = applyVerifiedHistoricalResults(overlaid);
+      const sanitized = sanitizeSportsSnapshot(withHistory, { now: options.now });
       await new FreeSportsSnapshotStore().write(sanitized);
       return sanitized;
     })
