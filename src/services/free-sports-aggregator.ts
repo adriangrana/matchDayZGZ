@@ -23,6 +23,15 @@ import {
 import { FreeSportsSnapshotStore } from "@/src/services/free-sports-snapshot-store";
 import { ResponsibleHttpClient } from "@/src/services/responsible-http-client";
 
+const TRUSTED_FINISHED_SOURCE_IDS = new Set([
+  "rfef-jornada-1-results",
+  "rfef-results-article",
+  "rfef-live-scoreboard",
+  "sofascore-live-fallback",
+  "sofascore-matchday-fallback",
+  "real-zaragoza-official",
+]);
+
 function genericTeam(name: string): Team {
   const id = normalizeTeamName(name).replace(/\s+/g, "-");
   return {
@@ -62,6 +71,62 @@ function sameNormalizedPair(
       normalizeTeamName(patch.homeTeamName) === normalizeTeamName(match.homeTeam.name) &&
       normalizeTeamName(patch.awayTeamName) === normalizeTeamName(match.awayTeam.name),
   );
+}
+
+function matchIdentity(match: NormalizedGroupMatch): string {
+  return `${match.round}|${match.homeTeam.id}|${match.awayTeam.id}`;
+}
+
+function hasTrustedFinishedSource(match: NormalizedGroupMatch): boolean {
+  return match.sources.some(
+    (source) =>
+      TRUSTED_FINISHED_SOURCE_IDS.has(source.id) ||
+      source.id.startsWith("rfef-results-article-"),
+  );
+}
+
+export function mergePreviousFinishedResults(
+  calendar: NormalizedGroupMatch[],
+  previous: NormalizedGroupMatch[],
+  now = new Date(),
+): NormalizedGroupMatch[] {
+  const previousByMatch = new Map(
+    previous
+      .filter(
+        (match) =>
+          match.status === "finished" &&
+          Boolean(match.score) &&
+          hasTrustedFinishedSource(match) &&
+          new Date(match.startsAt).getTime() <= now.getTime() + 5 * 60 * 1_000,
+      )
+      .map((match) => [matchIdentity(match), match]),
+  );
+
+  return calendar.map((match) => {
+    const historical = previousByMatch.get(matchIdentity(match));
+    if (!historical?.score) return match;
+
+    const historicalSourceIds = new Set(
+      historical.sources.map((source) => source.id),
+    );
+    return {
+      ...match,
+      startsAt: historical.startsAt,
+      kickoffStatus:
+        historical.kickoffStatus === "confirmed"
+          ? "confirmed"
+          : match.kickoffStatus,
+      score: historical.score,
+      status: "finished",
+      sources: [
+        ...historical.sources,
+        ...match.sources.filter(
+          (source) => !historicalSourceIds.has(source.id),
+        ),
+      ],
+      updatedAt: historical.updatedAt,
+    };
+  });
 }
 
 function mergeOfficialPatches(
@@ -156,12 +221,16 @@ export function mergeRfefFacts(
         candidate.source.id.startsWith("rfef-"),
     );
     if (!fact) return match;
+    const preserveFinished =
+      fact.status === "scheduled" &&
+      match.status === "finished" &&
+      Boolean(match.score);
     return {
       ...match,
       startsAt: fact.startsAt ?? match.startsAt,
       kickoffStatus: fact.startsAt ? fact.kickoffStatus : match.kickoffStatus,
       score: fact.score ?? match.score,
-      status: fact.status ?? match.status,
+      status: preserveFinished ? match.status : fact.status ?? match.status,
       sources: [fact.source, ...match.sources],
       updatedAt: fact.source.fetchedAt || fetchedAt,
     };
@@ -260,8 +329,13 @@ export class FreeSportsAggregator {
         ...options,
         group: "group-1",
       });
-      groupOneCalendar = mergeRfefFacts(
+      const groupOneWithHistory = mergePreviousFinishedResults(
         rfefGroupOne.matches,
+        previous?.groupOneMatches ?? [],
+        now,
+      );
+      groupOneCalendar = mergeRfefFacts(
+        groupOneWithHistory,
         rfefGroupOne.diagnostic.checkedAt,
       );
       diagnostics.push(rfefGroupOne.diagnostic);
@@ -281,7 +355,15 @@ export class FreeSportsAggregator {
     ).getOfficialData(options);
     diagnostics.push(...official.diagnostics);
 
-    const calendarWithFacts = mergeRfefFacts(calendar, now.toISOString());
+    const calendarWithHistory = mergePreviousFinishedResults(
+      calendar,
+      previous?.matches ?? [],
+      now,
+    );
+    const calendarWithFacts = mergeRfefFacts(
+      calendarWithHistory,
+      now.toISOString(),
+    );
     const liveResults = await new RfefLiveResultsProvider(this.http).getResults(
       [...calendarWithFacts, ...groupOneCalendar],
       options,
