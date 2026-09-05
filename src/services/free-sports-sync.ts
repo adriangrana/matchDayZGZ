@@ -1,6 +1,7 @@
 import { FreeSportsAggregator } from "@/src/services/free-sports-aggregator";
 import { applyLiveScoreOverlay } from "@/src/services/live-score-overlay";
 import { FreeSportsSnapshotStore } from "@/src/services/free-sports-snapshot-store";
+import { applyRfefCurrentRoundResults } from "@/src/services/rfef-current-round-results";
 import { sanitizeSportsSnapshot } from "@/src/services/sports-snapshot-sanitizer";
 import { rfefFallbackMatches } from "@/src/services/sports-catalog";
 
@@ -21,7 +22,10 @@ export function synchronizeFreeSports(options: {
   const operation = new FreeSportsAggregator(rfefFallbackMatches)
     .sync(options)
     .then(async (snapshot) => {
-      const overlaid = await applyLiveScoreOverlay(snapshot, { now: options.now });
+      const withCurrentRound = await applyRfefCurrentRoundResults(snapshot, options);
+      const overlaid = await applyLiveScoreOverlay(withCurrentRound, {
+        now: options.now,
+      });
       const sanitized = sanitizeSportsSnapshot(overlaid, { now: options.now });
       await new FreeSportsSnapshotStore().write(sanitized);
       return sanitized;
