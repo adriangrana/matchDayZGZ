@@ -13,6 +13,10 @@ const RESULT_SOURCE_IDS = new Set([
   "sofascore-matchday-fallback",
 ]);
 
+function isResultSourceId(id: string): boolean {
+  return RESULT_SOURCE_IDS.has(id) || id.startsWith("rfef-results-article-r");
+}
+
 function isImpossibleFutureResult(match: NormalizedGroupMatch, now: Date): boolean {
   if (match.status !== "finished" || !match.score) return false;
   const startsAt = new Date(match.startsAt).getTime();
@@ -27,7 +31,7 @@ function resetImpossibleResult(
   if (!isImpossibleFutureResult(match, now)) return match;
 
   const sources = match.sources.filter(
-    (source) => !RESULT_SOURCE_IDS.has(source.id),
+    (source) => !isResultSourceId(source.id),
   );
   const primary = sources[0];
 

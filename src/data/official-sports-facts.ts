@@ -4,7 +4,7 @@ const rfefRoundOneSource = {
   id: "rfef-jornada-1-results",
   name: "RFEF · Jornada 1",
   url: "https://rfef.es/es/noticias/resumenes-vive-la-jornada-1-de-primera-federacion",
-  fetchedAt: "2026-08-29T13:30:00.000Z",
+  fetchedAt: "2026-08-30T21:30:00.000Z",
   isOfficial: true,
 } as const;
 
@@ -125,7 +125,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "UE Sant Andreu",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-29T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 1, away: 0 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -134,7 +135,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "Villarreal CF \"B\"",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-29T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 1, away: 2 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -143,7 +145,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "FC Cartagena",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-29T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 1, away: 3 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -152,7 +155,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "Real Murcia CF",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-29T21:30:00+02:00",
-    status: "scheduled",
+    score: { home: 1, away: 2 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -161,7 +165,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "Real Jaén CF",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-30T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 0, away: 3 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -170,7 +175,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "AD Alcorcón",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-30T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 2, away: 2 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -179,7 +185,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "Juventud de Torremolinos CF",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-30T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 2, away: 2 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -188,7 +195,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "UD Ibiza",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-30T19:15:00+02:00",
-    status: "scheduled",
+    score: { home: 3, away: 2 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -198,7 +206,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     kickoffStatus: "confirmed",
     startsAt: "2026-08-30T21:30:00+02:00",
     venue: "Nou Estadi Costa Daurada",
-    status: "scheduled",
+    score: { home: 2, away: 0 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
   {
@@ -207,7 +216,8 @@ export const officialSportsFacts: OfficialMatchPatch[] = [
     awayTeamName: "Real Madrid Castilla",
     kickoffStatus: "confirmed",
     startsAt: "2026-08-31T21:15:00+02:00",
-    status: "scheduled",
+    score: { home: 0, away: 0 },
+    status: "finished",
     source: rfefRoundOneSource,
   },
 ];
